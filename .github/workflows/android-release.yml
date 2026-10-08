@@ -1,0 +1,62 @@
+name: Android Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.8.1'
+
+      - name: Build release APK
+        run: gradle assembleRelease --no-daemon --stacktrace
+
+      - name: Rename APK
+        run: |
+          VERSION="${GITHUB_REF_NAME:-manual}"
+          cp app/build/outputs/apk/release/app-release.apk "Aetheria-${VERSION}.apk"
+          ls -la *.apk
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Aetheria-APK
+          path: '*.apk'
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Aetheria ${{ github.ref_name }}
+          body: |
+            # 🎮 Aetheria: Guardianes del Cristal ${{ github.ref_name }}
+
+            Action-RPG anime 3D con 4 modos de juego: Campaña (25 niveles + 6 jefes),
+            Defensa Infinita, Arena Suprema (battle royale) y Mundo Abierto.
+
+            ## 📲 Instalación
+            1. Descarga `Aetheria-${{ github.ref_name }}.apk`
+            2. Ábrelo en tu teléfono Android (permite "orígenes desconocidos")
+            3. ¡A jugar!
+
+            > APK firmado con clave de prueba. Requiere Android 7.0+ (API 24)
+          files: '*.apk'
+          generate_release_notes: true
