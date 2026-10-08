@@ -294,7 +294,9 @@ const Combat = (() => {
       moving = true;
       p.model.group.rotation.y = p.facing;
     } else if (moving) {
-      const ang = Math.atan2(Input.moveX, Input.moveY) + camYaw;
+      // Movimiento relativo a cámara: screen-right = -cos(yaw) en X (mano derecha de three.js),
+      // por eso moveX entra negado en el ángulo.
+      const ang = Math.atan2(-Input.moveX, Input.moveY) + camYaw;
       const sp = p.spd * p.speedMult * statusSpd * mag;
       vx = Math.sin(ang) * sp; vz = Math.cos(ang) * sp;
       p.facing = ang;

@@ -421,9 +421,12 @@ const Modes = (() => {
       if (this.dropping) {
         this.dropT -= dt;
         p.pos.y = Math.max(Engine.groundY(p.pos.x, p.pos.z), p.pos.y - 16 * dt);
-        // mover en caída
-        p.pos.x = U.clamp(p.pos.x + Input.moveX * 22 * dt, -140, 140);
-        p.pos.z = U.clamp(p.pos.z + Input.moveY * 22 * dt, -140, 140);
+        // steer relativo a cámara (misma convención que el movimiento: X negada)
+        const cy = Engine.CamRig.yaw;
+        const mvx = (-Math.cos(cy) * Input.moveX + Math.sin(cy) * Input.moveY) * 22 * dt;
+        const mvz = (Math.sin(cy) * Input.moveX + Math.cos(cy) * Input.moveY) * 22 * dt;
+        p.pos.x = U.clamp(p.pos.x + mvx, -140, 140);
+        p.pos.z = U.clamp(p.pos.z + mvz, -140, 140);
         VFX.trail({ x: p.pos.x, y: p.pos.y + 1, z: p.pos.z }, '#e2e8f0', 0.5, 0.4);
         if (p.pos.y <= Engine.groundY(p.pos.x, p.pos.z) + 0.1) {
           this.dropping = false;

@@ -17,12 +17,12 @@ const Engine = (() => {
   let fogColorDay = new THREE.Color(), fogColorNight = new THREE.Color();
 
   const THEMES = {
-    meadow:  { sky: { top: '#2563eb', mid: '#7dd3fc', bot: '#fef3c7' }, fog: '#a8d5f2', sun: '#fff2c8', grass: '#48a860', grass2: '#3d8f52', water: '#0ea5e9', ambient: '#fbcfe8', hemi: 0.85 },
-    desert:  { sky: { top: '#0284c7', mid: '#fbbf24', bot: '#fde68a' }, fog: '#f2d5a0', sun: '#fff0b8', grass: '#d9a45b', grass2: '#c08b46', water: '#0ea5e9', ambient: '#fde68a', hemi: 0.9 },
-    snow:    { sky: { top: '#1e3a8a', mid: '#93c5fd', bot: '#e0f2fe' }, fog: '#cfe4f5', sun: '#eaf4ff', grass: '#e8f2f8', grass2: '#d5e5ef', water: '#38bdf8', ambient: '#e0f2fe', hemi: 0.95 },
-    volcano: { sky: { top: '#450a0a', mid: '#b91c1c', bot: '#f97316' }, fog: '#c26a4a', sun: '#ffca8a', grass: '#5b4a44', grass2: '#4a3c38', water: '#ea580c', ambient: '#fdba74', hemi: 0.7 },
-    void:    { sky: { top: '#0f0524', mid: '#4c1d95', bot: '#a78bfa' }, fog: '#6d5b9e', sun: '#d8b4fe', grass: '#4c3a75', grass2: '#3d2f60', water: '#7c3aed', ambient: '#c4b5fd', hemi: 0.6 },
-    royale:  { sky: { top: '#0c4a6e', mid: '#38bdf8', bot: '#fde68a' }, fog: '#a5d8e8', sun: '#fff2c8', grass: '#55a06a', grass2: '#47885a', water: '#0ea5e9', ambient: '#bbf7d0', hemi: 0.85 }
+    meadow:  { sky: { top: '#2563eb', mid: '#7dd3fc', bot: '#fef3c7' }, fog: '#a8d5f2', sun: '#fff2c8', grass: '#48a860', grass2: '#3d8f52', rock: '#8d9277', water: '#0ea5e9', ambient: '#fbcfe8', hemi: 0.85 },
+    desert:  { sky: { top: '#0284c7', mid: '#fbbf24', bot: '#fde68a' }, fog: '#f2d5a0', sun: '#fff0b8', grass: '#d9a45b', grass2: '#c08b46', rock: '#a97f4e', water: '#0ea5e9', ambient: '#fde68a', hemi: 0.9 },
+    snow:    { sky: { top: '#1e3a8a', mid: '#93c5fd', bot: '#e0f2fe' }, fog: '#cfe4f5', sun: '#eaf4ff', grass: '#e8f2f8', grass2: '#d5e5ef', rock: '#94a9bb', water: '#38bdf8', ambient: '#e0f2fe', hemi: 0.95 },
+    volcano: { sky: { top: '#450a0a', mid: '#b91c1c', bot: '#f97316' }, fog: '#c26a4a', sun: '#ffca8a', grass: '#5b4a44', grass2: '#4a3c38', rock: '#38302b', water: '#ea580c', ambient: '#fdba74', hemi: 0.7 },
+    void:    { sky: { top: '#0f0524', mid: '#4c1d95', bot: '#a78bfa' }, fog: '#6d5b9e', sun: '#d8b4fe', grass: '#4c3a75', grass2: '#3d2f60', rock: '#53417d', water: '#7c3aed', ambient: '#c4b5fd', hemi: 0.6 },
+    royale:  { sky: { top: '#0c4a6e', mid: '#38bdf8', bot: '#fde68a' }, fog: '#a5d8e8', sun: '#fff2c8', grass: '#55a06a', grass2: '#47885a', rock: '#84929e', water: '#0ea5e9', ambient: '#bbf7d0', hemi: 0.85 }
   };
 
   /* ---------- Init ---------- */
@@ -89,7 +89,7 @@ const Engine = (() => {
       }
     });
     scene.remove(worldRoot);
-    worldRoot = null; animProps = []; terrainMesh = null; waterMesh = null;
+    worldRoot = null; animProps = []; terrainMesh = null; waterMesh = null; grassMat = null;
     if (skyMesh) { scene.remove(skyMesh); skyMesh = null; }
     if (sun) { scene.remove(sun); sun = null; }
     if (starField) { scene.remove(starField); starField = null; }
@@ -122,27 +122,40 @@ const Engine = (() => {
     renderer.setClearColor(fogColorDay);
 
     /* Terreno con altura por tema */
-    const seg = quality === 'low' ? 48 : 72;
+    const seg = quality === 'low' ? 48 : quality === 'medium' ? 72 : 96;
     const geo = new THREE.PlaneGeometry(worldSize, worldSize, seg, seg);
     geo.rotateX(-Math.PI / 2);
     const pos = geo.attributes.position;
     heightFn = makeHeightFn(themeName, opts);
     const cGrass = new THREE.Color(T.grass), cGrass2 = new THREE.Color(T.grass2);
+    const cRock = new THREE.Color(T.rock);
     const cPath = new THREE.Color(shadeHex(T.grass, 14));
     const colorArr = new Float32Array(pos.count * 3);
+    const tmpC = new THREE.Color();
     for (let i = 0; i < pos.count; i++) {
       const x = pos.getX(i), z = pos.getZ(i);
       const y = heightFn(x, z);
       pos.setY(i, y);
-      // variación de color
-      const n = Math.sin(x * 0.11 + z * 0.07) * Math.cos(x * 0.05 - z * 0.13);
-      const c = cGrass.clone().lerp(cGrass2, n * 0.5 + 0.5);
-      if (Math.abs(x) < 4.5 && Math.abs(z) < 26) c.lerp(cPath, 0.55); // camino central
-      colorArr[i * 3] = c.r; colorArr[i * 3 + 1] = c.g; colorArr[i * 3 + 2] = c.b;
+      // dos octavas de variación (manchas grandes + moteado fino)
+      const n1 = Math.sin(x * 0.11 + z * 0.07) * Math.cos(x * 0.05 - z * 0.13);
+      const n2 = Math.sin(x * 0.42 + z * 0.36) * Math.cos(x * 0.31 + z * 0.44);
+      tmpC.copy(cGrass).lerp(cGrass2, U.clamp(n1 * 0.7 + n2 * 0.3, -1, 1) * 0.5 + 0.5);
+      // pendiente → tinte rocoso
+      const hx = heightFn(x + 1.4, z) - heightFn(x - 1.4, z);
+      const hz = heightFn(x, z + 1.4) - heightFn(x, z - 1.4);
+      const slope = Math.sqrt(hx * hx + hz * hz) / 2.8;
+      if (slope > 0.32) tmpC.lerp(cRock, Math.min(0.85, (slope - 0.32) * 1.9));
+      // tinte por altura (cumbres más claras)
+      tmpC.offsetHSL(0, 0, U.clamp(y * 0.008, 0, 0.07));
+      if (Math.abs(x) < 4.5 && Math.abs(z) < 26) tmpC.lerp(cPath, 0.55); // camino central
+      colorArr[i * 3] = tmpC.r; colorArr[i * 3 + 1] = tmpC.g; colorArr[i * 3 + 2] = tmpC.b;
     }
     geo.setAttribute('color', new THREE.BufferAttribute(colorArr, 3));
     geo.computeVertexNormals();
-    const groundMat = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: Models.gradientMap(3) });
+    // Textura de detalle multiplicada sobre el color del vértice: da grano al suelo
+    const detail = detailTexture();
+    detail.repeat.set(worldSize / 6, worldSize / 6);
+    const groundMat = new THREE.MeshToonMaterial({ vertexColors: true, map: detail, gradientMap: Models.gradientMap(3) });
     terrainMesh = new THREE.Mesh(geo, groundMat);
     if (quality === 'high') { terrainMesh.receiveShadow = true; }
     worldRoot.add(terrainMesh);
@@ -156,6 +169,9 @@ const Engine = (() => {
 
     /* Vegetación / props */
     const rng = U.seeded(opts.seed || 12345);
+    /* Campo de hierba con viento */
+    const grass = buildGrassField(themeName, worldSize, rng, opts);
+    if (grass) worldRoot.add(grass);
     const nTrees = opts.trees !== undefined ? opts.trees : (quality === 'low' ? 40 : 80);
     for (let i = 0; i < nTrees; i++) {
       const x = (rng() - 0.5) * (worldSize - 24), z = (rng() - 0.5) * (worldSize - 24);
@@ -214,6 +230,169 @@ const Engine = (() => {
     };
   }
 
+  /* ---------- Textura de detalle del suelo (grano neutro multiplicativo) ---------- */
+  let _detailTex = null;
+  function detailTexture() {
+    if (_detailTex) return _detailTex;
+    const c = document.createElement('canvas'); c.width = c.height = 256;
+    const x = c.getContext('2d');
+    x.fillStyle = '#ffffff'; x.fillRect(0, 0, 256, 256);
+    // manchas suaves grandes (variación de humedad)
+    for (let i = 0; i < 90; i++) {
+      const g = 215 + Math.floor(Math.random() * 40);
+      const gx = Math.random() * 256, gy = Math.random() * 256, gr = 8 + Math.random() * 26;
+      const grad = x.createRadialGradient(gx, gy, 0, gx, gy, gr);
+      grad.addColorStop(0, `rgba(${g},${g},${g},0.55)`);
+      grad.addColorStop(1, 'rgba(255,255,255,0)');
+      x.fillStyle = grad;
+      x.beginPath(); x.arc(gx, gy, gr, 0, 7); x.fill();
+    }
+    // grano fino (píxeles) — rango más contrastado para que se note multiplicado
+    for (let i = 0; i < 4200; i++) {
+      const v = 170 + Math.floor(Math.random() * 85);
+      x.fillStyle = `rgb(${v},${v},${v})`;
+      x.fillRect(Math.random() * 256, Math.random() * 256, Math.random() < 0.85 ? 1 : 2, 1);
+    }
+    // rayitas tipo césped rastrillado
+    x.strokeStyle = 'rgba(178,178,178,0.25)'; x.lineWidth = 1;
+    for (let i = 0; i < 260; i++) {
+      const sx = Math.random() * 256, sy = Math.random() * 256;
+      const a = Math.random() * Math.PI;
+      const len = 4 + Math.random() * 9;
+      x.beginPath();
+      x.moveTo(sx, sy);
+      x.lineTo(sx + Math.cos(a) * len, sy + Math.sin(a) * len);
+      x.stroke();
+    }
+    _detailTex = new THREE.CanvasTexture(c);
+    _detailTex.wrapS = _detailTex.wrapT = THREE.RepeatWrapping;
+    _detailTex.anisotropy = renderer ? Math.min(8, renderer.capabilities.getMaxAnisotropy()) : 4;
+    return _detailTex;
+  }
+
+  /* ---------- Textura de brizna de hierba (alpha) ---------- */
+  let _bladeTex = null;
+  function grassBladeTexture() {
+    if (_bladeTex) return _bladeTex;
+    const c = document.createElement('canvas'); c.width = 64; c.height = 64;
+    const x = c.getContext('2d');
+    x.clearRect(0, 0, 64, 64);
+    for (let i = 0; i < 8; i++) {
+      const bx = 5 + i * 7.4 + Math.random() * 3;
+      const tipX = bx + (Math.random() - 0.5) * 16;
+      const tipY = 2 + Math.random() * 14;
+      const grd = x.createLinearGradient(0, 64, 0, 0);
+      grd.addColorStop(0, 'rgba(255,255,255,0.95)');
+      grd.addColorStop(1, 'rgba(255,255,255,0.75)');
+      x.strokeStyle = grd;
+      x.lineWidth = 2.6 + Math.random() * 1.6;
+      x.lineCap = 'round';
+      x.beginPath();
+      x.moveTo(bx, 64);
+      x.quadraticCurveTo(bx + (tipX - bx) * 0.3, 34, tipX, tipY);
+      x.stroke();
+    }
+    _bladeTex = new THREE.CanvasTexture(c);
+    return _bladeTex;
+  }
+
+  /* ---------- Campo de hierba animada (un solo draw call) ---------- */
+  let grassMat = null;
+  const GRASS_CFG = {
+    meadow:  { count: [0, 1600, 3400], base: '#3a7a3e', tip: '#a3dd77', flower: '#fde047', flowerChance: 0.10 },
+    desert:  { count: [0, 550, 1100],  base: '#a08140', tip: '#e3c87e', flower: '#fb923c', flowerChance: 0.05 },
+    snow:    { count: [0, 750, 1500],  base: '#b6c6d6', tip: '#f6fbfe', flower: '#7dd3fc', flowerChance: 0.04 },
+    volcano: { count: [0, 400, 850],   base: '#4d3f36', tip: '#81695f', flower: '#fb923c', flowerChance: 0.07 },
+    void:    { count: [0, 950, 2000],  base: '#534077', tip: '#ab8ee6', flower: '#e9d5ff', flowerChance: 0.13 },
+    royale:  { count: [0, 1600, 3400], base: '#3a7444', tip: '#a0d57e', flower: '#fde047', flowerChance: 0.10 }
+  };
+  function buildGrassField(themeName, size, rng, opts) {
+    const cfg = GRASS_CFG[themeName] || GRASS_CFG.meadow;
+    const qIdx = quality === 'high' ? 2 : quality === 'medium' ? 1 : 0;
+    const count = cfg.count[qIdx];
+    if (!count) return null;
+    const P = [], UV = [], C = [], PH = [], IDX = [];
+    const base = new THREE.Color(cfg.base), tip = new THREE.Color(cfg.tip), flower = new THREE.Color(cfg.flower);
+    const cLow = new THREE.Color(), cHigh = new THREE.Color();
+    let vi = 0, placed = 0, tries = 0;
+    while (placed < count && tries < count * 3) {
+      tries++;
+      const x = (rng() - 0.5) * (size - 14), z = (rng() - 0.5) * (size - 14);
+      if (Math.abs(x) < 5 && Math.abs(z) < 27) continue;      // camino despejado
+      const y = heightFn(x, z);
+      if (opts.island && y < -1.2) continue;                    // bajo el agua
+      const slope = Math.abs(heightFn(x + 1.2, z) - y) + Math.abs(heightFn(x, z + 1.2) - y);
+      if (slope > 1.1) continue;                                // demasiado empinado
+      const w = 0.55 + rng() * 0.55, h = 0.34 + rng() * 0.4;
+      const isFlower = rng() < cfg.flowerChance;
+      cLow.copy(base).offsetHSL(0, 0, (rng() - 0.5) * 0.07);
+      cHigh.copy(tip).offsetHSL(0, 0, (rng() - 0.5) * 0.07);
+      if (isFlower) cHigh.copy(flower);
+      const rot = rng() * Math.PI;
+      for (let q2 = 0; q2 < 2; q2++) {
+        const a = rot + q2 * Math.PI / 2;
+        const dx = Math.cos(a) * w / 2, dz = Math.sin(a) * w / 2;
+        P.push(x - dx, y, z - dz, x + dx, y, z + dz, x + dx, y + h, z + dz, x - dx, y + h, z - dz);
+        UV.push(0, 0, 1, 0, 1, 1, 0, 1);
+        C.push(cLow.r, cLow.g, cLow.b, cLow.r, cLow.g, cLow.b, cHigh.r, cHigh.g, cHigh.b, cHigh.r, cHigh.g, cHigh.b);
+        const ph = x * 0.33 + z * 0.27 + rng() * 1.4;
+        PH.push(ph, ph, ph, ph);
+        IDX.push(vi, vi + 1, vi + 2, vi, vi + 2, vi + 3);
+        vi += 4;
+      }
+      placed++;
+    }
+    if (!placed) return null;
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(P, 3));
+    geo.setAttribute('uv', new THREE.Float32BufferAttribute(UV, 2));
+    geo.setAttribute('color', new THREE.Float32BufferAttribute(C, 3));
+    geo.setAttribute('aPhase', new THREE.Float32BufferAttribute(PH, 1));
+    geo.setIndex(IDX);
+    grassMat = new THREE.ShaderMaterial({
+      uniforms: {
+        map: { value: grassBladeTexture() },
+        time: { value: 0 },
+        fogColor: { value: new THREE.Color('#ffffff') },
+        fogNear: { value: worldSize * 0.35 },
+        fogFar: { value: worldSize * 1.35 }
+      },
+      vertexShader: `
+        attribute float aPhase;
+        uniform float time;
+        varying vec2 vUv; varying vec3 vColor; varying float vFogDepth;
+        void main() {
+          vUv = uv; vColor = color;
+          vec3 p = position;
+          float w1 = sin(time * 1.7 + aPhase);
+          float w2 = sin(time * 3.1 + aPhase * 1.37);
+          float amt = uv.y * uv.y * 0.17;
+          p.x += (w1 * 0.7 + w2 * 0.3) * amt;
+          p.z += cos(time * 1.3 + aPhase) * 0.6 * amt;
+          vec4 mv = modelViewMatrix * vec4(p, 1.0);
+          vFogDepth = -mv.z;
+          gl_Position = projectionMatrix * mv;
+        }`,
+      fragmentShader: `
+        uniform sampler2D map; uniform vec3 fogColor; uniform float fogNear, fogFar;
+        varying vec2 vUv; varying vec3 vColor; varying float vFogDepth;
+        void main() {
+          vec4 t = texture2D(map, vUv);
+          if (t.a < 0.45) discard;
+          vec3 col = vColor * (0.92 + t.r * 0.08);
+          float f = smoothstep(fogNear, fogFar, vFogDepth);
+          col = mix(col, fogColor, f);
+          gl_FragColor = vec4(col, 1.0);
+        }`,
+      vertexColors: true, side: THREE.DoubleSide
+    });
+    if (scene && scene.fog) grassMat.uniforms.fogColor.value.copy(scene.fog.color);
+    const mesh = new THREE.Mesh(geo, grassMat);
+    mesh.frustumCulled = false;
+    Engine.registerAnim((t) => { if (grassMat) grassMat.uniforms.time.value = t; });
+    return mesh;
+  }
+
   function groundY(x, z) {
     if (!heightFn) return 0;
     return heightFn(U.clamp(x, -worldSize / 2 + 2, worldSize / 2 - 2), U.clamp(z, -worldSize / 2 + 2, worldSize / 2 - 2));
@@ -241,6 +420,7 @@ const Engine = (() => {
     hemiLight.intensity = 0.28 + daylight * 0.65;
     const c = fogColorDay.clone().lerp(fogColorNight, 1 - daylight);
     scene.fog.color.copy(c);
+    if (grassMat) grassMat.uniforms.fogColor.value.copy(c);
     renderer.setClearColor(c);
     if (starField) starField.userData.mat.opacity = Math.max(0, 0.9 - daylight * 1.4);
     if (skyMesh && skyMesh.userData.top) {
