@@ -1,6 +1,6 @@
 plugins {
   alias(libs.plugins.android.application)
-  alias(libs.plugins.kotlin.android)
+  // AGP 9 trae Kotlin integrado: no aplicar org.jetbrains.kotlin.android
 }
 
 android {
