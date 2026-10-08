@@ -50,7 +50,7 @@ class MainActivity : Activity() {
             webViewClient = WebViewClient()
             webChromeClient = object : WebChromeClient() {
                 override fun onConsoleMessage(msg: ConsoleMessage): Boolean {
-                    Log.d("AetheriaJS", "[${msg.line()}] ${msg.message()}")
+                    Log.d("AetheriaJS", "[${msg.lineNumber()}] ${msg.message()}")
                     return true
                 }
             }
