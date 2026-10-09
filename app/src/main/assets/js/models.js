@@ -7,14 +7,36 @@
 
 const Models = (() => {
 
-  /* ---------- Cargador de texturas empaquetadas (CC0 ambientCG) ---------- */
+  /* ---------- Cargador de texturas empaquetadas (CC0 ambientCG) ----------
+     OJO: crossOrigin debe quedar vacío — en WebView el juego corre desde
+     file:///android_asset y una Image con crossOrigin='anonymous' falla
+     (CORS no aplica a file://), dejando el terreno negro. */
   const texLoader = new THREE.TextureLoader();
+  texLoader.setCrossOrigin('');
   const texCache = {};
+  window.__texErrors = 0;
+  function texFallback(t) {
+    // textura procedural clara: nunca dejar el mundo en negro
+    const c = document.createElement('canvas'); c.width = c.height = 128;
+    const x = c.getContext('2d');
+    x.fillStyle = '#ffffff'; x.fillRect(0, 0, 128, 128);
+    for (let i = 0; i < 900; i++) {
+      const v = 198 + Math.floor(Math.random() * 58);
+      x.fillStyle = 'rgb(' + v + ',' + v + ',' + v + ')';
+      x.fillRect(Math.random() * 128, Math.random() * 128, 1, 1);
+    }
+    t.image = c; t.needsUpdate = true;
+  }
   function tex(name) {
     if (texCache[name]) return texCache[name];
-    const t = texLoader.load('textures/' + name + '.jpg');
+    const t = texLoader.load('textures/' + name + '.jpg', undefined, undefined, () => {
+      window.__texErrors++;
+      try { UI.toast('Textura no disponible: ' + name); } catch (e) {}
+      texFallback(t);
+    });
     t.wrapS = t.wrapT = THREE.RepeatWrapping;
     t.anisotropy = 4;
+    if (name.endsWith('_c')) t.encoding = THREE.sRGBEncoding; // color en espacio correcto
     texCache[name] = t;
     return t;
   }

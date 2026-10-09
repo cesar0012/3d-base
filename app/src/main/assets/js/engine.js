@@ -164,7 +164,10 @@ const Engine = (() => {
     const groundMat = new THREE.MeshToonMaterial({
       vertexColors: true, map: cTex, gradientMap: Models.gradientMap(3)
     });
-    if (nTex) { groundMat.normalMap = nTex; groundMat.normalScale = new THREE.Vector2(0.55, 0.55); }
+    // normal map solo en WebGL2: en WebGL1 (WebView antiguo) puede compilar mal el toon
+    if (nTex && renderer && renderer.capabilities.isWebGL2) {
+      groundMat.normalMap = nTex; groundMat.normalScale = new THREE.Vector2(0.55, 0.55);
+    }
     terrainMesh = new THREE.Mesh(geo, groundMat);
     if (quality === 'high') { terrainMesh.receiveShadow = true; }
     worldRoot.add(terrainMesh);

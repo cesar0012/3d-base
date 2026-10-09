@@ -11,8 +11,8 @@ android {
     applicationId = "com.neox.aetheria"
     minSdk = 24
     targetSdk = 36
-    versionCode = 4
-    versionName = "2.1.0"
+    versionCode = 5
+    versionName = "2.1.1"
   }
 
   // Firma: si existen las variables de entorno (CI/Play Store) usa keystore propio;
