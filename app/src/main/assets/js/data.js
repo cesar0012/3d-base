@@ -18,13 +18,13 @@ DATA.RARITY = {
 
 /* ---------- Elementos ---------- */
 DATA.ELEMENTS = {
-  fisico:     { name: 'Físico',      color: '#e2e8f0', icon: '✦', strongVs: null },
-  fuego:      { name: 'Fuego',       color: '#fb923c', icon: '🔥', strongVs: 'hielo' },
-  hielo:      { name: 'Hielo',       color: '#7dd3fc', icon: '❄', strongVs: 'naturaleza' },
-  rayo:       { name: 'Rayo',        color: '#facc15', icon: '⚡', strongVs: 'agua' },
-  naturaleza: { name: 'Naturaleza',  color: '#4ade80', icon: '🌿', strongVs: 'oscuridad' },
-  luz:        { name: 'Luz',         color: '#fde68a', icon: '✨', strongVs: 'oscuridad' },
-  oscuridad:  { name: 'Oscuridad',   color: '#c084fc', icon: '🌑', strongVs: 'luz' }
+  fisico:     { name: 'Físico',      color: '#e2e8f0', icon: 'spark', strongVs: null },
+  fuego:      { name: 'Fuego',       color: '#fb923c', icon: 'flame', strongVs: 'hielo' },
+  hielo:      { name: 'Hielo',       color: '#7dd3fc', icon: 'snowflake', strongVs: 'naturaleza' },
+  rayo:       { name: 'Rayo',        color: '#facc15', icon: 'zap', strongVs: 'agua' },
+  naturaleza: { name: 'Naturaleza',  color: '#4ade80', icon: 'leaf', strongVs: 'oscuridad' },
+  luz:        { name: 'Luz',         color: '#fde68a', icon: 'sun', strongVs: 'oscuridad' },
+  oscuridad:  { name: 'Oscuridad',   color: '#c084fc', icon: 'moon', strongVs: 'luz' }
 };
 DATA.elementMult = (atkEl, defEl) => {
   if (!atkEl || !defEl) return 1;
@@ -38,33 +38,33 @@ DATA.elementMult = (atkEl, defEl) => {
 /* ---------- Habilidades ---------- */
 DATA.SKILLS = {
   // Genéricas por clase (cada héroe: skill1, skill2, ultimate)
-  torbellino:  { name: 'Torbellino',    icon: '🌀', cd: 6,  desc: 'Gira dañando a todos los enemigos alrededor.', type: 'aoe',        radius: 4.5, dmgMult: 1.6, element: 'fisico' },
-  embestida:   { name: 'Embestida',     icon: '➤',  cd: 7,  desc: 'Cargas hacia adelante arrasando enemigos.',    type: 'dash',       dist: 8, dmgMult: 1.4, element: 'fisico' },
-  multidisparo:{ name: 'Lluvia de Flechas', icon: '🏹', cd: 8, desc: 'Dispara una andanada de flechas perforantes.', type: 'volley', count: 7, dmgMult: 0.75, element: 'fisico' },
-  flecha_hielo:{ name: 'Flecha Gélida', icon: '❄', cd: 9,  desc: 'Flecha de hielo que congela a los impactados.', type: 'projectile', dmgMult: 2.2, element: 'hielo', effect: 'freeze' },
-  nova_hiela:  { name: 'Nova de Escarcha', icon: '❄', cd: 12, desc: 'Explosión de hielo: daña y ralentiza el área.', type: 'aoe', radius: 6, dmgMult: 2.4, element: 'hielo', effect: 'freeze' },
-  meteoro:     { name: 'Meteoro',       icon: '☄',  cd: 14, desc: 'Invoca un meteoro devastador en el área objetivo.', type: 'meteor', radius: 5, dmgMult: 3.2, element: 'fuego', effect: 'burn' },
-  bola_fuego:  { name: 'Bola de Fuego', icon: '🔥', cd: 6,  desc: 'Proyectil explosivo de fuego.', type: 'projectile', dmgMult: 2.0, element: 'fuego', effect: 'burn' },
-  golpe_escudo:{ name: 'Golpe de Escudo', icon: '🛡', cd: 8, desc: 'Aturde a los enemigos cercanos y gana escudo.', type: 'aoe', radius: 4, dmgMult: 1.2, element: 'luz', effect: 'stun', shield: 0.25 },
-  luz_sagrada: { name: 'Luz Sagrada',   icon: '✨', cd: 12, desc: 'Cura al guardián y otorga regeneración.', type: 'heal', heal: 0.35, regen: 4, element: 'luz' },
-  golpe_sombra:{ name: 'Golpe Sombrío', icon: '🌑', cd: 9,  desc: 'Teletransporte tras el enemigo con golpe crítico.', type: 'blink', dmgMult: 2.6, element: 'oscuridad' },
-  nube_veneno: { name: 'Esporas',       icon: '🌿', cd: 10, desc: 'Esporas que envenenan y ralentizan el área.', type: 'aoe', radius: 5.5, dmgMult: 1.2, element: 'naturaleza', effect: 'poison' },
-  latigo_vida: { name: 'Látigo de Vid', icon: '🌱', cd: 11, desc: 'Enreda a los enemigos del área (inmoviliza).', type: 'aoe', radius: 5, dmgMult: 1.5, element: 'naturaleza', effect: 'root' },
-  invocar_esq: { name: 'Alza-huesos',   icon: '💀', cd: 16, desc: 'Invoca 3 esqueletos aliados que luchan por ti.', type: 'summon', count: 3, lifetime: 20 },
-  drenar_vida: { name: 'Drenar Vida',   icon: '🩸', cd: 9,  desc: 'Roba vida de los enemigos cercanos.', type: 'aoe', radius: 5, dmgMult: 1.4, element: 'oscuridad', lifesteal: 0.6 },
-  cadena_rayo: { name: 'Cadena Eléctrica', icon: '⚡', cd: 10, desc: 'Rayo que salta entre enemigos.', type: 'chain', jumps: 4, dmgMult: 1.5, element: 'rayo' },
-  furia:        { name: 'Furia',         icon: '😤', cd: 15, desc: '+60% ataque y velocidad 6 segundos.', type: 'buff', stat: 'atk', amt: 0.6, dur: 6 }
+  torbellino:  { name: 'Torbellino',    icon: 'tornado', cd: 6,  desc: 'Gira dañando a todos los enemigos alrededor.', type: 'aoe',        radius: 4.5, dmgMult: 1.6, element: 'fisico' },
+  embestida:   { name: 'Embestida',     icon: 'chevrons', cd: 7,  desc: 'Cargas hacia adelante arrasando enemigos.',    type: 'dash',       dist: 8, dmgMult: 1.4, element: 'fisico' },
+  multidisparo:{ name: 'Lluvia de Flechas', icon: 'bow', cd: 8, desc: 'Dispara una andanada de flechas perforantes.', type: 'volley', count: 7, dmgMult: 0.75, element: 'fisico' },
+  flecha_hielo:{ name: 'Flecha Gélida', icon: 'snowflake', cd: 9,  desc: 'Flecha de hielo que congela a los impactados.', type: 'projectile', dmgMult: 2.2, element: 'hielo', effect: 'freeze' },
+  nova_hiela:  { name: 'Nova de Escarcha', icon: 'snowflake', cd: 12, desc: 'Explosión de hielo: daña y ralentiza el área.', type: 'aoe', radius: 6, dmgMult: 2.4, element: 'hielo', effect: 'freeze' },
+  meteoro:     { name: 'Meteoro',       icon: 'meteor', cd: 14, desc: 'Invoca un meteoro devastador en el área objetivo.', type: 'meteor', radius: 5, dmgMult: 3.2, element: 'fuego', effect: 'burn' },
+  bola_fuego:  { name: 'Bola de Fuego', icon: 'flame', cd: 6,  desc: 'Proyectil explosivo de fuego.', type: 'projectile', dmgMult: 2.0, element: 'fuego', effect: 'burn' },
+  golpe_escudo:{ name: 'Golpe de Escudo', icon: 'shield', cd: 8, desc: 'Aturde a los enemigos cercanos y gana escudo.', type: 'aoe', radius: 4, dmgMult: 1.2, element: 'luz', effect: 'stun', shield: 0.25 },
+  luz_sagrada: { name: 'Luz Sagrada',   icon: 'sun', cd: 12, desc: 'Cura al guardián y otorga regeneración.', type: 'heal', heal: 0.35, regen: 4, element: 'luz' },
+  golpe_sombra:{ name: 'Golpe Sombrío', icon: 'moon', cd: 9,  desc: 'Teletransporte tras el enemigo con golpe crítico.', type: 'blink', dmgMult: 2.6, element: 'oscuridad' },
+  nube_veneno: { name: 'Esporas',       icon: 'leaf', cd: 10, desc: 'Esporas que envenenan y ralentizan el área.', type: 'aoe', radius: 5.5, dmgMult: 1.2, element: 'naturaleza', effect: 'poison' },
+  latigo_vida: { name: 'Látigo de Vid', icon: 'sprout', cd: 11, desc: 'Enreda a los enemigos del área (inmoviliza).', type: 'aoe', radius: 5, dmgMult: 1.5, element: 'naturaleza', effect: 'root' },
+  invocar_esq: { name: 'Alza-huesos',   icon: 'skull', cd: 16, desc: 'Invoca 3 esqueletos aliados que luchan por ti.', type: 'summon', count: 3, lifetime: 20 },
+  drenar_vida: { name: 'Drenar Vida',   icon: 'drop', cd: 9,  desc: 'Roba vida de los enemigos cercanos.', type: 'aoe', radius: 5, dmgMult: 1.4, element: 'oscuridad', lifesteal: 0.6 },
+  cadena_rayo: { name: 'Cadena Eléctrica', icon: 'zap', cd: 10, desc: 'Rayo que salta entre enemigos.', type: 'chain', jumps: 4, dmgMult: 1.5, element: 'rayo' },
+  furia:        { name: 'Furia',         icon: 'rage', cd: 15, desc: '+60% ataque y velocidad 6 segundos.', type: 'buff', stat: 'atk', amt: 0.6, dur: 6 }
 };
 
 DATA.ULTS = {
-  filo_infierno: { name: 'Filo del Infierno', icon: '⚔', cost: 100, desc: 'Kael libera un tajo de fuego en línea devastadora.', type: 'line', dmgMult: 4.5, element: 'fuego' },
-  lluvia_estelar:{ name: 'Lluvia Estelar',    icon: '🌠', cost: 100, desc: 'Lyra bombardea el área con flechas astrales.', type: 'arrowrain', dmgMult: 3.8, element: 'fisico' },
-  cero_absoluto: { name: 'Cero Absoluto',     icon: '🧊', cost: 100, desc: 'Mira congela todo a su alrededor.', type: 'aoe', radius: 9, dmgMult: 4.2, element: 'hielo', effect: 'freeze' },
-  juicio:         { name: 'Juicio Divino',    icon: '⚖',  cost: 100, desc: 'Ronnan invoca espadas de luz que caen en el área.', type: 'swordrain', dmgMult: 4.0, element: 'luz' },
-  ejecucion:      { name: 'Ejecución',        icon: '🗡', cost: 100, desc: 'Zed marca y ejecuta a los enemigos cercanos.', type: 'aoe', radius: 8, dmgMult: 5.2, element: 'oscuridad', execThreshold: 0.15 },
-  jardin_silva:   { name: 'Jardín de Silva',  icon: '🌳', cost: 100, desc: 'Un jardín sanador florece: daño masivo y cura total.', type: 'aoe', radius: 9, dmgMult: 3.6, element: 'naturaleza', heal: 0.5 },
-  cataclismo:     { name: 'Cataclismo',       icon: '🌋', cost: 100, desc: 'Ignis desata una lluvia de meteoros.', type: 'arrowrain', dmgMult: 4.6, element: 'fuego', effect: 'burn' },
-  legion_muerta:  { name: 'Legión Muerta',    icon: '☠',  cost: 100, desc: 'Nyx alza un ejército de 6 esqueletos y aterroriza.', type: 'summon', count: 6, lifetime: 30, terror: 3 }
+  filo_infierno: { name: 'Filo del Infierno', icon: 'swords', cost: 100, desc: 'Kael libera un tajo de fuego en línea devastadora.', type: 'line', dmgMult: 4.5, element: 'fuego' },
+  lluvia_estelar:{ name: 'Lluvia Estelar',    icon: 'star', cost: 100, desc: 'Lyra bombardea el área con flechas astrales.', type: 'arrowrain', dmgMult: 3.8, element: 'fisico' },
+  cero_absoluto: { name: 'Cero Absoluto',     icon: 'snowflake', cost: 100, desc: 'Mira congela todo a su alrededor.', type: 'aoe', radius: 9, dmgMult: 4.2, element: 'hielo', effect: 'freeze' },
+  juicio:         { name: 'Juicio Divino',    icon: 'hammer', cost: 100, desc: 'Ronnan invoca espadas de luz que caen en el área.', type: 'swordrain', dmgMult: 4.0, element: 'luz' },
+  ejecucion:      { name: 'Ejecución',        icon: 'dagger', cost: 100, desc: 'Zed marca y ejecuta a los enemigos cercanos.', type: 'aoe', radius: 8, dmgMult: 5.2, element: 'oscuridad', execThreshold: 0.15 },
+  jardin_silva:   { name: 'Jardín de Silva',  icon: 'sprout', cost: 100, desc: 'Un jardín sanador florece: daño masivo y cura total.', type: 'aoe', radius: 9, dmgMult: 3.6, element: 'naturaleza', heal: 0.5 },
+  cataclismo:     { name: 'Cataclismo',       icon: 'meteor', cost: 100, desc: 'Ignis desata una lluvia de meteoros.', type: 'arrowrain', dmgMult: 4.6, element: 'fuego', effect: 'burn' },
+  legion_muerta:  { name: 'Legión Muerta',    icon: 'skull', cost: 100, desc: 'Nyx alza un ejército de 6 esqueletos y aterroriza.', type: 'summon', count: 6, lifetime: 30, terror: 3 }
 };
 
 /* ---------- Héroes ---------- */
@@ -314,9 +314,9 @@ DATA.STORY = {
 
 /* ---------- Eventos ---------- */
 DATA.EVENTS = [
-  { id: 'e_weekend', name: 'Fiebre del Fin de Semana', desc: 'x2 oro en todas las batallas', icon: '💰', schedule: 'Sáb y Dom', buff: { goldMult: 2 } },
-  { id: 'e_hunter',  name: 'Cazador de Jefes',         desc: 'Jefes dan x3 gemas',           icon: '👑', schedule: 'Lun a Mié', buff: { bossGemMult: 3 } },
-  { id: 'e_arena',   name: 'Semana de la Arena',       desc: 'Recompensas x2 en Arena Suprema', icon: '⚔', schedule: 'Jue a Vie', buff: { royaleMult: 2 } }
+  { id: 'e_weekend', name: 'Fiebre del Fin de Semana', desc: 'x2 oro en todas las batallas', icon: 'coin', schedule: 'Sáb y Dom', buff: { goldMult: 2 } },
+  { id: 'e_hunter',  name: 'Cazador de Jefes',         desc: 'Jefes dan x3 gemas',           icon: 'crown', schedule: 'Lun a Mié', buff: { bossGemMult: 3 } },
+  { id: 'e_arena',   name: 'Semana de la Arena',       desc: 'Recompensas x2 en Arena Suprema', icon: 'swords', schedule: 'Jue a Vie', buff: { royaleMult: 2 } }
 ];
 DATA.activeEvents = () => {
   const day = new Date().getDay(); // 0 dom

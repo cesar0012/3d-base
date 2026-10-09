@@ -212,6 +212,7 @@ const Combat = (() => {
     crit += weaponDef.crit || 0;
 
     const model = Models.character({
+      heroId,
       hair: hero.model.hair, hairStyle: hero.model.hairStyle, skin: hero.model.skin,
       outfit: hero.model.outfit, outfit2: hero.model.outfit2, accent: hero.model.accent,
       cape: hero.rarity === 'SR' || hero.rarity === 'SSR' || hero.rarity === 'UR',
@@ -316,8 +317,10 @@ const Combat = (() => {
     // Integrar
     const nx = p.pos.x + vx * dt, nz = p.pos.z + vz * dt;
     const half = Engine.worldSize / 2 - 3;
-    p.pos.x = U.clamp(nx, -half, half);
-    p.pos.z = U.clamp(nz, -half, half);
+    let cx = U.clamp(nx, -half, half), cz = U.clamp(nz, -half, half);
+    // colisión contra árboles/casas/rocas/props
+    [cx, cz] = Engine.resolveCollisions(cx, cz, 0.45);
+    p.pos.x = cx; p.pos.z = cz;
     const gy = Engine.groundY(p.pos.x, p.pos.z);
     p.pos.y = U.damp(p.pos.y, gy, 18, dt);
 
@@ -385,9 +388,9 @@ const Combat = (() => {
           hitAny = true;
         }
       }
-      // Slash visual
+      // Slash frontal
       const slashCol = p.element && p.element !== 'fisico' ? DATA.ELEMENTS[p.element].color : '#fff7cc';
-      VFX.ring({ x: p.pos.x + Math.sin(p.facing) * 1.2, y: p.pos.y, z: p.pos.z + Math.cos(p.facing) * 1.2 }, slashCol, 1.6, 0.22, 0.8);
+      VFX.slash(p.pos, p.facing, slashCol, range);
       if (hitAny) Combat.hitStop(45);
     }
   }
@@ -744,6 +747,7 @@ const Combat = (() => {
   }
 
   function updateEnemies(dt) {
+    const halfW = Engine.worldSize / 2 - 3;
     for (const e of enemies.slice()) {
       if (e.dead) continue;
       e.stateT += dt;
@@ -823,6 +827,9 @@ const Combat = (() => {
         if (e.stateT >= e.recoverDur) { e.state = 'chase'; e.stateT = 0; }
       }
       e.model.group.rotation.y = U.angleLerp(e.model.group.rotation.y, e.facing, Math.min(1, dt * 8));
+      // colisión contra el escenario
+      const [ecx, ecz] = Engine.resolveCollisions(e.pos.x, e.pos.z, (e.radius || 0.5) * 0.8);
+      e.pos.x = U.clamp(ecx, -halfW, halfW); e.pos.z = U.clamp(ecz, -halfW, halfW);
       const gy = Engine.groundY(e.pos.x, e.pos.z);
       e.pos.y = U.damp(e.pos.y, gy, 14, dt);
       if (e.model.group.userData.anim) e.model.group.userData.anim(Engine.clockT, e.moveAmt);
@@ -890,7 +897,7 @@ const Combat = (() => {
     if (p.shieldHp > 0) {
       const absorbed = Math.min(p.shieldHp, dmg);
       p.shieldHp -= absorbed; dmg -= absorbed;
-      VFX.dmgNumber({ x: p.pos.x, y: 2.2, z: p.pos.z }, '🛡', 'info');
+      VFX.dmgNumber({ x: p.pos.x, y: 2.2, z: p.pos.z }, 'ESCUDO', 'info');
     }
     dmg = Math.max(1, Math.round(dmg));
     p.hp -= dmg;
@@ -924,6 +931,7 @@ const Combat = (() => {
     g.position.copy(pos);
     scene.add(g);
     Engine.registerAnim((t) => { if (g.userData.anim) g.userData.anim(t); });
+    Engine.addCollider(pos.x, pos.z, 2.1);
     crystalObj = { group: g, pos: g.position, hp: 1000, maxHp: 1000 };
     return crystalObj;
   }

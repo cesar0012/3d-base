@@ -30,6 +30,11 @@
 html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: var(--bg0); }
 body { font-family: 'Rubik', system-ui, sans-serif; color: #e8edf7; user-select: none; -webkit-user-select: none; touch-action: none; }
 button { font-family: 'Rubik', sans-serif; cursor: pointer; }
+.ico, [data-ico] { display: inline-flex; vertical-align: -3px; line-height: 1; }
+.sk-ico { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+.abtn .sk-ico { position: absolute; inset: 0; }
+.abtn .sk-cd { position: absolute; inset: 0; }
+#talk-btn { left: 50%; transform: translateX(-50%); position: absolute; bottom: 170px; }
 h1, h2, h3, .cinzel { font-family: 'Cinzel', serif; }
 
 /* ---------- Canvas y capas ---------- */
@@ -487,41 +492,41 @@ input[type=range] { width: 130px; accent-color: #38bdf8; }
 <div id="screen-menu" class="screen">
   <div class="menu-particles" id="menu-particles"></div>
   <div class="currencies">
-    <div class="cur gold">🪙 <span id="cur-gold">0</span></div>
-    <div class="cur gems">💎 <span id="cur-gems">0</span></div>
-    <div class="cur tickets">🎟️ <span id="cur-tickets">0</span></div>
+    <div class="cur gold"><i data-ico="coin" data-size="15"></i> <span id="cur-gold">0</span></div>
+    <div class="cur gems"><i data-ico="gem" data-size="15"></i> <span id="cur-gems">0</span></div>
+    <div class="cur tickets"><i data-ico="ticket" data-size="15"></i> <span id="cur-tickets">0</span></div>
   </div>
   <div id="menu-player-card"></div>
   <div id="menu-events-strip"></div>
   <div class="menu-modes">
     <button class="mode-big campaign span2" id="btn-campaign">
-      <span class="mb-ico">📖</span>
+      <span class="mb-ico"><i data-ico="book" data-size="30"></i></span>
       <span class="mb-name">Campaña</span>
       <span class="mb-sub" id="menu-campaign-progress">25 niveles · 6 jefes</span>
     </button>
     <button class="mode-big endless" id="btn-endless">
-      <span class="mb-ico">🏰</span>
+      <span class="mb-ico"><i data-ico="castle" data-size="30"></i></span>
       <span class="mb-name">Defensa Infinita</span>
       <span class="mb-sub" id="menu-endless-progress">Oleadas sin fin</span>
     </button>
     <button class="mode-big royale" id="btn-royale">
-      <span class="mb-ico">👑</span>
+      <span class="mb-ico"><i data-ico="crown" data-size="30"></i></span>
       <span class="mb-name">Arena Suprema</span>
       <span class="mb-sub">20 luchadores · Battle Royale</span>
     </button>
     <button class="mode-big explore span2" id="btn-explore">
-      <span class="mb-ico">🗺️</span>
+      <span class="mb-ico"><i data-ico="globe" data-size="30"></i></span>
       <span class="mb-name">Mundo Abierto</span>
       <span class="mb-sub">Explora · Misiones · 12 fragmentos</span>
     </button>
   </div>
   <div class="bottom-nav">
-    <button class="nav-btn" id="nav-heroes"><span class="n-ico">🎭</span>Héroes</button>
-    <button class="nav-btn" id="nav-armory"><span class="n-ico">⚔️</span>Armería</button>
-    <button class="nav-btn" id="nav-gacha"><span class="n-ico">✨</span>Invocar</button>
-    <button class="nav-btn" id="nav-missions"><span class="n-ico">📜</span>Misiones</button>
-    <button class="nav-btn" id="nav-events"><span class="n-ico">🔥</span>Eventos</button>
-    <button class="nav-btn" id="nav-settings"><span class="n-ico">⚙️</span>Ajustes</button>
+    <button class="nav-btn" id="nav-heroes"><span class="n-ico"><i data-ico="users" data-size="19"></i></span>Héroes</button>
+    <button class="nav-btn" id="nav-armory"><span class="n-ico"><i data-ico="sword" data-size="19"></i></span>Armería</button>
+    <button class="nav-btn" id="nav-gacha"><span class="n-ico"><i data-ico="sparkles" data-size="19"></i></span>Invocar</button>
+    <button class="nav-btn" id="nav-missions"><span class="n-ico"><i data-ico="banner" data-size="19"></i></span>Misiones</button>
+    <button class="nav-btn" id="nav-events"><span class="n-ico"><i data-ico="flame" data-size="19"></i></span>Eventos</button>
+    <button class="nav-btn" id="nav-settings"><span class="n-ico"><i data-ico="gear" data-size="19"></i></span>Ajustes</button>
   </div>
 </div>
 
@@ -558,12 +563,12 @@ input[type=range] { width: 130px; accent-color: #38bdf8; }
   <div class="screen-scroll">
     <div id="gacha-banner"></div>
     <div class="gacha-btns">
-      <button class="btn btn-purple" id="gacha-single-ticket">🎟️ x1</button>
-      <button class="btn btn-gold" id="gacha-ten-ticket">🎟️ x10</button>
-      <button class="btn btn-blue" id="gacha-single-gems">💎 150</button>
-      <button class="btn btn-gold" id="gacha-ten-gems">💎 1350</button>
+      <button class="btn btn-purple" id="gacha-single-ticket"><i data-ico="ticket" data-size="16"></i> x1</button>
+      <button class="btn btn-gold" id="gacha-ten-ticket"><i data-ico="ticket" data-size="16"></i> x10</button>
+      <button class="btn btn-blue" id="gacha-single-gems"><i data-ico="gem" data-size="16"></i> 150</button>
+      <button class="btn btn-gold" id="gacha-ten-gems"><i data-ico="gem" data-size="16"></i> 1350 <span class="disc">-10%</span></button>
     </div>
-    <div class="hint">Los héroes repetidos se convierten en 💎 gemas</div>
+    <div class="hint">Los héroes repetidos se convierten en gemas</div>
   </div>
 </div>
 
@@ -600,7 +605,7 @@ input[type=range] { width: 130px; accent-color: #38bdf8; }
     <span class="sub-title">Eventos y Tienda</span>
   </div>
   <div class="screen-scroll">
-    <div class="section-title">🔥 EVENTOS ACTIVOS</div>
+    <div class="section-title"><i data-ico="flame" data-size="15"></i> EVENTOS ACTIVOS</div>
     <div id="events-list"></div>
     <div id="gem-shop"></div>
   </div>
@@ -625,12 +630,12 @@ input[type=range] { width: 130px; accent-color: #38bdf8; }
       <div id="wave-info"></div>
     </div>
     <div id="hud-btns">
-      <button class="hud-icon-btn" id="cam-btn">🎥</button>
-      <button class="hud-icon-btn" id="pause-btn">⏸</button>
+      <button class="hud-icon-btn" id="cam-btn"><i data-ico="camera" data-size="18"></i></button>
+      <button class="hud-icon-btn" id="pause-btn"><i data-ico="pause" data-size="18"></i></button>
     </div>
   </div>
   <div id="hud-currencies" style="position:absolute; top: calc(64px + env(safe-area-inset-top)); right: 12px;">
-    <div class="cur gold">🪙 <span id="hud-gold">0</span></div>
+    <div class="cur gold"><i data-ico="coin" data-size="13"></i> <span id="hud-gold">0</span></div>
   </div>
   <div id="hud-bars">
     <div class="bar-shell">
@@ -654,13 +659,13 @@ input[type=range] { width: 130px; accent-color: #38bdf8; }
   <div id="joystick"><div id="joystick-knob"></div></div>
   <div id="cam-zone"></div>
   <div id="action-btns">
-    <div class="abtn skill-btn" id="skill-2">🌀<div class="sk-cd" id="skill-2-cd"></div></div>
-    <div class="abtn skill-btn" id="skill-1">💫<div class="sk-cd" id="skill-1-cd"></div></div>
-    <div class="abtn" id="dodge-btn">⇄</div>
-    <div class="abtn skill-btn" id="skill-ult">⚡<div class="sk-cd" id="skill-ult-cd"></div></div>
-    <div class="abtn" id="attack-btn">⚔</div>
+    <div class="abtn skill-btn" id="skill-2"><span class="sk-ico" id="skill-2-ico"><i data-ico="tornado" data-size="24"></i></span><div class="sk-cd" id="skill-2-cd"></div></div>
+    <div class="abtn skill-btn" id="skill-1"><span class="sk-ico" id="skill-1-ico"><i data-ico="spark" data-size="24"></i></span><div class="sk-cd" id="skill-1-cd"></div></div>
+    <div class="abtn" id="dodge-btn"><span class="sk-ico"><i data-ico="roll" data-size="22"></i></span></div>
+    <div class="abtn skill-btn" id="skill-ult"><span class="sk-ico" id="skill-ult-ico"><i data-ico="zap" data-size="27"></i></span><div class="sk-cd" id="skill-ult-cd"></div></div>
+    <div class="abtn" id="attack-btn"><span class="sk-ico"><i data-ico="sword" data-size="30"></i></span></div>
   </div>
-  <button class="btn btn-blue btn-small" id="talk-btn">💬 Hablar</button>
+  <button class="btn btn-blue" id="talk-btn" style="width:auto;padding:10px 22px;font-size:14px"><i data-ico="chat" data-size="17"></i> Hablar</button>
   <div id="wave-shop">
     <div id="wave-shop-title">🛒 Tienda entre oleadas</div>
     <div id="wave-shop-opts"></div>
@@ -668,14 +673,14 @@ input[type=range] { width: 130px; accent-color: #38bdf8; }
   <div id="dlg-box">
     <div id="dlg-name"></div>
     <div id="dlg-text"></div>
-    <div id="dlg-next">▸ toca para continuar</div>
+    <div id="dlg-next">toca para continuar</div>
   </div>
 </div>
 
 <!-- ============ OVERLAYS ============ -->
 <div id="screen-login" class="overlay">
   <div class="popup">
-    <h3>🎁 Recompensa Diaria</h3>
+    <h3><i data-ico="gift" data-size="20"></i> Recompensa Diaria</h3>
     <div id="login-body"></div>
     <button class="btn btn-gold" id="login-claim">Reclamar</button>
   </div>
@@ -683,7 +688,7 @@ input[type=range] { width: 130px; accent-color: #38bdf8; }
 
 <div id="screen-news" class="overlay">
   <div class="popup">
-    <h3>📜 Novedades</h3>
+    <h3><i data-ico="book" data-size="20"></i> Novedades</h3>
     <div id="news-body" style="font-size:13px;line-height:1.6"></div>
     <button class="btn btn-blue" id="news-ok">¡A luchar!</button>
   </div>
@@ -709,7 +714,7 @@ input[type=range] { width: 130px; accent-color: #38bdf8; }
 
 <div id="screen-gacha-results" class="overlay">
   <div class="popup">
-    <h3>✨ Resultados de Invocación</h3>
+    <h3><i data-ico="sparkles" data-size="20"></i> Resultados de Invocación</h3>
     <div id="gacha-results"></div>
     <button class="btn btn-purple" id="gacha-results-ok">¡Genial!</button>
   </div>
@@ -717,10 +722,10 @@ input[type=range] { width: 130px; accent-color: #38bdf8; }
 
 <div id="screen-pause" class="overlay">
   <div class="popup">
-    <div class="pause-title">⏸ PAUSA</div>
-    <button class="btn btn-green" id="pause-resume">▶ Continuar</button>
-    <button class="btn btn-blue" id="pause-retry">🔄 Reiniciar</button>
-    <button class="btn btn-red" id="pause-menu">🏠 Menú principal</button>
+    <div class="pause-title"><i data-ico="pause" data-size="20"></i> PAUSA</div>
+    <button class="btn btn-green" id="pause-resume"><i data-ico="play" data-size="15"></i> Continuar</button>
+    <button class="btn btn-blue" id="pause-retry"><i data-ico="roll" data-size="15"></i> Reiniciar</button>
+    <button class="btn btn-red" id="pause-menu"><i data-ico="home" data-size="15"></i> Menú principal</button>
   </div>
 </div>
 
@@ -729,9 +734,9 @@ input[type=range] { width: 130px; accent-color: #38bdf8; }
     <div class="results-title" id="results-title"></div>
     <div id="results-sub"></div>
     <div id="results-body"></div>
-    <button class="btn btn-blue" id="results-retry">🔄 Reintentar</button>
-    <button class="btn btn-green" id="results-next">Siguiente ▸</button>
-    <button class="btn btn-grey" id="results-menu">🏠 Menú</button>
+    <button class="btn btn-blue" id="results-retry"><i data-ico="roll" data-size="15"></i> Reintentar</button>
+    <button class="btn btn-green" id="results-next">Siguiente <i data-ico="arrowr" data-size="15"></i></button>
+    <button class="btn btn-grey" id="results-menu"><i data-ico="home" data-size="15"></i> Menú</button>
   </div>
 </div>
 
@@ -743,6 +748,7 @@ input[type=range] { width: 130px; accent-color: #38bdf8; }
 
 <!-- ============ SCRIPTS (100% locales, sin CDN) ============ -->
 <script src="lib/three.min.js"></script>
+<script src="js/icons.js"></script>
 <script src="js/utils.js"></script>
 <script src="js/data.js"></script>
 <script src="js/vfx.js"></script>
@@ -753,6 +759,13 @@ input[type=range] { width: 130px; accent-color: #38bdf8; }
 <script src="js/modes.js"></script>
 <script src="js/main.js"></script>
 <script>
+/* Render de iconos declarativos */
+(function () {
+  const paint = () => document.querySelectorAll('[data-ico]').forEach(el => {
+    el.innerHTML = Ico.n(el.dataset.ico, +(el.dataset.size || 16));
+  });
+  if (window.Ico) paint(); else window.addEventListener('load', paint);
+})();
 /* Partículas decorativas del menú */
 (function () {
   const cont = document.getElementById('menu-particles');

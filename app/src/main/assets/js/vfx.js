@@ -132,6 +132,31 @@ const VFX = (() => {
     spawn(pos.x, pos.y, pos.z, { life, size, color, grav: 0 });
   }
 
+  /* ---------- Slash de ataque cuerpo a cuerpo (arco frontal) ---------- */
+  const slashes = [];
+  function slash(pos, angle, color = '#fff7cc', range = 2.6) {
+    const thetaLen = 2.1;
+    const geo = new THREE.RingGeometry(range * 0.35, range * 0.95, 14, 1, -thetaLen / 2, thetaLen);
+    const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.9, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending });
+    const m = new THREE.Mesh(geo, mat);
+    m.rotation.x = -Math.PI / 2;
+    m.rotation.z = angle - Math.PI / 2;
+    m.position.set(pos.x + Math.sin(angle) * range * 0.35, pos.y + 0.85, pos.z + Math.cos(angle) * range * 0.35);
+    scene.add(m);
+    slashes.push({ m, t: 0, dur: 0.17 });
+  }
+  function updateSlashes(dt) {
+    for (let i = slashes.length - 1; i >= 0; i--) {
+      const s = slashes[i];
+      s.t += dt;
+      const p = s.t / s.dur;
+      if (p >= 1) { scene.remove(s.m); s.m.geometry.dispose(); s.m.material.dispose(); slashes.splice(i, 1); continue; }
+      const sc = 0.55 + p * 0.6;
+      s.m.scale.set(sc, sc, 1);
+      s.m.material.opacity = 0.9 * (1 - p * p);
+    }
+  }
+
   /* ---------- Anillos de impacto ---------- */
   const rings = [];
   function ring(pos, color = '#ffffff', maxR = 5, dur = 0.5, yOff = 0.15) {
@@ -400,12 +425,12 @@ const VFX = (() => {
   }
 
   function updateAll(dt, t) {
-    updateParticles(dt); updateRings(dt); updateTelegraphs(dt); updateDamageNumbers(dt); updateBeams(dt);
+    updateParticles(dt); updateRings(dt); updateTelegraphs(dt); updateDamageNumbers(dt); updateBeams(dt); updateSlashes(dt);
   }
   function attachScene(sc) { scene = sc; }
 
   return {
-    glowTex, softTex, initParticles, attachScene, spawn, burst, ringBurst, trail,
+    glowTex, softTex, initParticles, attachScene, spawn, burst, ringBurst, trail, slash,
     ring, telegraph, clearTelegraphs, initDamageNumbers, dmgNumber,
     shake, updateShake, setFlashEl, flash,
     skyDome, sunSprite, clouds, stars, waterPlane, beam, ambientParticles, updateAmbient,

@@ -7,6 +7,18 @@
 
 const Models = (() => {
 
+  /* ---------- Cargador de texturas empaquetadas (CC0 ambientCG) ---------- */
+  const texLoader = new THREE.TextureLoader();
+  const texCache = {};
+  function tex(name) {
+    if (texCache[name]) return texCache[name];
+    const t = texLoader.load('textures/' + name + '.jpg');
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.anisotropy = 4;
+    texCache[name] = t;
+    return t;
+  }
+
   /* ---------- Toon gradient maps ---------- */
   const gradCache = {};
   function gradientMap(steps = 3) {
@@ -240,6 +252,11 @@ const Models = (() => {
 
     const parts = { root, body, torso, headG, head, face, hair, arms, legs, weaponMount, cape };
 
+    /* ===== Decoración única por héroe (siluetas distintivas) ===== */
+    if (cfg.heroId && HERO_DECOR[cfg.heroId]) {
+      HERO_DECOR[cfg.heroId]({ root, body, torso, headG, head, face, hair, arms, legs, weaponMount, cape }, s, cfg, { box, sphere, cone, cyl, capsule, toonMat, shade });
+    }
+
     /* Animación procedural */
     const A = {
       state: 'idle', t: Math.random() * 10, atkP: 0, atkType: 'espada', castP: 0,
@@ -344,6 +361,129 @@ const Models = (() => {
 
     return { group: root, parts, tick, play, hitFlash, setWeapon, setFace, A, cfg: { skin, outfit, outfit2, accent } };
   }
+
+  /* ============================================================
+     DECORACIONES ÚNICAS POR HÉROE — siluetas reconocibles
+     ============================================================ */
+  const HERO_DECOR = {
+    // Kael: banda de guerrero + hombreras reforzadas + cinturón con placa
+    kael(P, s, cfg, H) {
+      const band = H.cyl(0.27 * s, 0.27 * s, 0.07 * s, H.toonMat(cfg.accent), 12);
+      band.position.y = 0.05 * s; P.headG.add(band);
+      const knot = H.cone(0.06 * s, 0.22 * s, H.toonMat(cfg.accent), 4);
+      knot.position.set(0.12 * s, 0.1 * s, -0.26 * s); knot.rotation.z = 0.7; P.headG.add(knot);
+      for (const side of [-1, 1]) {
+        const plate = H.sphere(0.15 * s, H.toonMat(H.shade(cfg.outfit2, -12)), 8, 6);
+        plate.scale.set(1.2, 0.8, 1.2); plate.position.set(side * 0.28 * s, 1.14 * s, 0); P.body.add(plate);
+      }
+    },
+    // Lyra: capucha de arquera + carcaj con flechas
+    lyra(P, s, cfg, H) {
+      const hood = H.cone(0.3 * s, 0.42 * s, H.toonMat(cfg.outfit), 8);
+      hood.position.set(0, 0.16 * s, -0.04 * s); hood.rotation.x = -0.25; P.headG.add(hood);
+      const quiver = H.cyl(0.09 * s, 0.11 * s, 0.5 * s, H.toonMat('#78350f'), 8);
+      quiver.position.set(-0.18 * s, 1.0 * s, -0.26 * s); quiver.rotation.z = 0.35; P.body.add(quiver);
+      for (let i = 0; i < 3; i++) {
+        const arr = H.cyl(0.012 * s, 0.012 * s, 0.55 * s, H.toonMat('#e2e8f0'), 4);
+        arr.position.set(-0.18 * s + (i - 1) * 0.04 * s, 1.32 * s, -0.26 * s); arr.rotation.z = 0.35;
+        P.body.add(arr);
+        const tip = H.cone(0.025 * s, 0.07 * s, H.toonMat('#94a3b8'), 4);
+        tip.position.set(-0.26 * s + (i - 1) * 0.035 * s, 1.6 * s, -0.26 * s); P.body.add(tip);
+      }
+    },
+    // Mira: sombrero de maga + falda cónica + cinta estelar
+    mira(P, s, cfg, H) {
+      const brim = H.cyl(0.42 * s, 0.46 * s, 0.05 * s, H.toonMat(cfg.outfit2), 14);
+      brim.position.y = 0.24 * s; P.headG.add(brim);
+      const top = H.cone(0.28 * s, 0.55 * s, H.toonMat(cfg.outfit), 10);
+      top.position.y = 0.5 * s; top.rotation.z = 0.12; P.headG.add(top);
+      const star = H.sphere(0.05 * s, H.toonMat(cfg.accent, { emissive: cfg.accent }), 6, 5);
+      star.position.set(0.1 * s, 0.68 * s, 0.14 * s); P.headG.add(star);
+      const skirt = H.cone(0.34 * s, 0.55 * s, H.toonMat(cfg.outfit2), 10);
+      skirt.position.y = 0.62 * s; P.body.add(skirt);
+    },
+    // Ronan: yelmo con visor + escudo en brazo izq + tabardo + hombreras doradas
+    ronan(P, s, cfg, H) {
+      P.hair.visible = false;
+      const helm = H.sphere(0.285 * s, H.toonMat(H.shade(cfg.outfit2, -10)), 10, 8);
+      helm.position.y = 0.02 * s; P.headG.add(helm);
+      const crest = H.cone(0.05 * s, 0.2 * s, H.toonMat(cfg.accent), 4);
+      crest.position.y = 0.3 * s; P.headG.add(crest);
+      const visor = H.box(0.34 * s, 0.07 * s, 0.08 * s, H.toonMat('#111827'));
+      visor.position.set(0, -0.01 * s, 0.24 * s); P.headG.add(visor);
+      P.torso.scale.x = 1.18; // complexión más ancha
+      for (const side of [-1, 1]) {
+        const pad = H.sphere(0.16 * s, H.toonMat(cfg.accent), 8, 6);
+        pad.scale.set(1.25, 0.85, 1.25); pad.position.set(side * 0.3 * s, 1.14 * s, 0); P.body.add(pad);
+      }
+      const shield = H.cyl(0.26 * s, 0.3 * s, 0.06 * s, H.toonMat(cfg.accent), 12);
+      shield.rotation.z = Math.PI / 2; shield.position.set(-0.32 * s, 0.78 * s, 0.12 * s);
+      P.arms.L.add(shield);
+      const boss = H.sphere(0.07 * s, H.toonMat('#fef3c7'), 6, 5);
+      boss.position.set(0.07 * s, 0, 0); shield.add(boss);
+      const tabard = H.box(0.3 * s, 0.6 * s, 0.03 * s, H.toonMat(cfg.outfit));
+      tabard.position.set(0, 0.72 * s, 0.24 * s); P.body.add(tabard);
+    },
+    // Zed: capucha oscura + bufanda cubrebocas + capa rasgada
+    zed(P, s, cfg, H) {
+      const hood = H.cone(0.3 * s, 0.45 * s, H.toonMat('#0b1220'), 8);
+      hood.position.set(0, 0.14 * s, -0.03 * s); P.headG.add(hood);
+      const mask = H.box(0.32 * s, 0.12 * s, 0.12 * s, H.toonMat('#7f1d1d'));
+      mask.position.set(0, -0.09 * s, 0.2 * s); P.headG.add(mask);
+      const scarf = H.box(0.34 * s, 0.08 * s, 0.3 * s, H.toonMat('#7f1d1d'));
+      scarf.position.set(0, 1.05 * s, 0); P.body.add(scarf);
+      P.torso.scale.x = 0.92; // silueta esbelta
+    },
+    // Sylvie: corona de flores + falda de hojas
+    sylvie(P, s, cfg, H) {
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.24 * s, 0.03 * s, 6, 14), H.toonMat('#4d7c0f'));
+      ring.rotation.x = Math.PI / 2; ring.position.y = 0.2 * s; P.headG.add(ring);
+      for (let i = 0; i < 5; i++) {
+        const a = (i / 5) * Math.PI * 2;
+        const petal = H.sphere(0.05 * s, H.toonMat(i % 2 ? '#f9a8d4' : '#fef3c7'), 6, 5);
+        petal.position.set(Math.sin(a) * 0.24 * s, 0.22 * s, Math.cos(a) * 0.24 * s);
+        P.headG.add(petal);
+      }
+      const skirt = H.cone(0.36 * s, 0.5 * s, H.toonMat('#166534'), 10);
+      skirt.position.y = 0.64 * s; P.body.add(skirt);
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * Math.PI * 2 + 0.3;
+        const leafTip = H.cone(0.06 * s, 0.16 * s, H.toonMat('#22c55e'), 5);
+        leafTip.position.set(Math.sin(a) * 0.3 * s, 0.42 * s, Math.cos(a) * 0.3 * s);
+        leafTip.rotation.x = Math.PI; leafTip.rotation.z = Math.sin(a) * 0.4;
+        P.body.add(leafTip);
+      }
+    },
+    // Ignis: pelo llameante + hombreras de obsidiana + ojos brillantes
+    ignis(P, s, cfg, H) {
+      // llamas sobre la cabeza (cones emisivos)
+      for (let i = 0; i < 5; i++) {
+        const a = -Math.PI * 0.75 + (i / 4) * Math.PI * 0.5;
+        const fl = H.cone(0.07 * s, 0.3 * s + Math.random() * 0.12 * s, H.toonMat(i % 2 ? '#fb923c' : '#fbbf24', { emissive: '#f97316' }), 5);
+        fl.position.set(Math.sin(a) * 0.18 * s, 0.22 * s + Math.abs(Math.cos(a)) * 0.06 * s, 0);
+        fl.rotation.z = -a * 0.4; P.headG.add(fl);
+      }
+      for (const side of [-1, 1]) {
+        const obs = H.box(0.22 * s, 0.12 * s, 0.22 * s, H.toonMat('#1c1917'));
+        obs.position.set(side * 0.28 * s, 1.15 * s, 0); obs.rotation.z = side * 0.3; P.body.add(obs);
+      }
+    },
+    // Nyx: corona de huesos + orbe flotante familiar + túnica larga
+    nyx(P, s, cfg, H) {
+      for (let i = 0; i < 4; i++) {
+        const a = (i / 4) * Math.PI * 2;
+        const bone = H.cone(0.035 * s, 0.16 * s, H.toonMat('#e7e5e4'), 5);
+        bone.position.set(Math.sin(a) * 0.2 * s, 0.26 * s, Math.cos(a) * 0.2 * s);
+        bone.rotation.z = Math.sin(a) * 0.5; P.headG.add(bone);
+      }
+      const robe = H.cone(0.38 * s, 0.7 * s, H.toonMat(cfg.outfit2), 10);
+      robe.position.y = 0.56 * s; P.body.add(robe);
+      const orb = H.sphere(0.09 * s, new THREE.MeshBasicMaterial({ color: '#c084fc' }), 8, 8);
+      orb.position.set(0.34 * s, 1.15 * s, 0.22 * s); P.body.add(orb);
+      const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: VFX.glowTex(), color: '#a855f7', transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false }));
+      glow.scale.setScalar(0.55 * s); glow.position.copy(orb.position); P.body.add(glow);
+    }
+  };
 
   /* ============================================================
      ARMAS
@@ -804,16 +944,108 @@ const Models = (() => {
   }
   function house(theme = 'meadow') {
     const g = new THREE.Group();
-    const wallM = toonMat(theme === 'snow' ? '#e2e8f0' : theme === 'void' ? '#312e81' : '#fef3c7');
+    // Muros con textura de madera CC0
+    const wallTex = tex('wood_c');
+    wallTex.repeat.set(1.6, 1.2);
+    const wallM = new THREE.MeshToonMaterial({ color: theme === 'snow' ? '#d8e4ee' : theme === 'void' ? '#37306b' : '#e8d5a8', map: wallTex, gradientMap: gradientMap(3) });
     const roofColor = { meadow: '#b91c1c', desert: '#d97706', snow: '#0369a1', volcano: '#1c1917', void: '#4c1d95' }[theme] || '#b91c1c';
     const roofM = toonMat(roofColor);
-    const base = box(2.4, 1.7, 2.0, wallM); base.position.y = 0.85; g.add(base);
-    const roof = new THREE.Mesh(new THREE.ConeGeometry(2.1, 1.4, 4), roofM);
-    roof.position.y = 2.35; roof.rotation.y = Math.PI / 4; g.add(roof);
-    const door = box(0.6, 1.0, 0.08, toonMat('#78350f')); door.position.set(0, 0.5, 1.02); g.add(door);
-    for (const side of [-1, 1]) {
-      const win = box(0.45, 0.45, 0.06, basicMat('#fde68a')); win.position.set(side * 0.7, 1.1, 1.02); g.add(win);
+    const beamM = toonMat('#6b4423');
+    // zócalo de piedra
+    const stoneBase = box(2.56, 0.36, 2.16, toonMat('#94a3b8'));
+    stoneBase.position.y = 0.18; g.add(stoneBase);
+    const base = box(2.4, 1.7, 2.0, wallM); base.position.y = 1.05; g.add(base);
+    // vigas de esquina
+    for (const [sx, sz] of [[-1, 1], [1, 1], [-1, -1], [1, -1]]) {
+      const beam = box(0.16, 1.7, 0.16, beamM);
+      beam.position.set(sx * 1.14, 1.05, sz * 0.94); g.add(beam);
     }
+    // viga superior
+    const topBeam = box(2.5, 0.14, 0.12, beamM);
+    topBeam.position.set(0, 1.82, 0.98); g.add(topBeam);
+    const roof = new THREE.Mesh(new THREE.ConeGeometry(2.15, 1.5, 4), roofM);
+    roof.position.y = 2.65; roof.rotation.y = Math.PI / 4; g.add(roof);
+    // chimenea
+    const chim = box(0.36, 0.9, 0.36, toonMat('#78716c'));
+    chim.position.set(0.72, 2.75, -0.3); g.add(chim);
+    const chimTop = box(0.46, 0.12, 0.46, toonMat('#57534e'));
+    chimTop.position.set(0.72, 3.22, -0.3); g.add(chimTop);
+    // puerta con marco
+    const doorFrame = box(0.76, 1.14, 0.1, beamM); doorFrame.position.set(0, 0.62, 1.02); g.add(doorFrame);
+    const doorTexMat = new THREE.MeshToonMaterial({ color: '#a1691f', map: tex('wood_c'), gradientMap: gradientMap(3) });
+    const door = box(0.6, 1.0, 0.09, doorTexMat); door.position.set(0, 0.58, 1.05); g.add(door);
+    const knob = sphere(0.035, toonMat('#fbbf24'), 6, 5); knob.position.set(0.2, 0.55, 1.11); g.add(knob);
+    // ventanas con marco y cristal cálido
+    for (const side of [-1, 1]) {
+      const wf = box(0.6, 0.6, 0.08, beamM); wf.position.set(side * 0.72, 1.28, 1.02); g.add(wf);
+      const win = box(0.44, 0.44, 0.09, basicMat('#fde68a')); win.position.set(side * 0.72, 1.28, 1.04); g.add(win);
+      const mullion = box(0.05, 0.44, 0.1, beamM); mullion.position.set(side * 0.72, 1.28, 1.05); g.add(mullion);
+    }
+    return g;
+  }
+  function fence(len = 6) {
+    const g = new THREE.Group();
+    const woodM = new THREE.MeshToonMaterial({ color: '#a1691f', map: tex('wood_c'), gradientMap: gradientMap(3) });
+    const postGeo = new THREE.BoxGeometry(0.14, 0.9, 0.14);
+    const n = Math.max(2, Math.round(len / 1.1));
+    for (let i = 0; i <= n; i++) {
+      const post = new THREE.Mesh(postGeo, woodM);
+      post.position.set(-len / 2 + (i / n) * len, 0.45, 0);
+      g.add(post);
+    }
+    for (const yy of [0.35, 0.68]) {
+      const rail = new THREE.Mesh(new THREE.BoxGeometry(len, 0.09, 0.07), woodM);
+      rail.position.set(0, yy, 0); g.add(rail);
+    }
+    return g;
+  }
+  function lamp() {
+    const g = new THREE.Group();
+    const post = cyl(0.06, 0.09, 2.1, toonMat('#334155'), 7);
+    post.position.y = 1.05; g.add(post);
+    const arm = box(0.5, 0.07, 0.07, toonMat('#334155'));
+    arm.position.set(0.2, 2.05, 0); g.add(arm);
+    const cage = box(0.26, 0.32, 0.26, toonMat('#1e293b'));
+    cage.position.set(0.42, 1.86, 0); g.add(cage);
+    const flame = sphere(0.09, basicMat('#fde68a'), 8, 6);
+    flame.position.set(0.42, 1.86, 0); g.add(flame);
+    const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: VFX.glowTex(), color: '#fbbf24', transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false }));
+    glow.scale.setScalar(1.4); glow.position.set(0.42, 1.9, 0); g.add(glow);
+    g.userData.anim = (t) => { glow.material.opacity = 0.42 + Math.sin(t * 5 + 1) * 0.12; };
+    return g;
+  }
+  function well() {
+    const g = new THREE.Group();
+    const stoneM = toonMat('#94a3b8');
+    const ring = new THREE.Mesh(new THREE.CylinderGeometry(0.75, 0.8, 0.7, 12, 1, true), stoneM);
+    ring.position.y = 0.35; g.add(ring);
+    const water = cyl(0.62, 0.62, 0.05, basicMat('#0ea5e9'), 12);
+    water.position.y = 0.4; g.add(water);
+    for (const side of [-1, 1]) {
+      const post = box(0.12, 1.3, 0.12, toonMat('#6b4423'));
+      post.position.set(side * 0.62, 1.0, 0); g.add(post);
+    }
+    const roof = new THREE.Mesh(new THREE.ConeGeometry(1.0, 0.5, 4), toonMat('#b45309'));
+    roof.position.y = 1.9; roof.rotation.y = Math.PI / 4; g.add(roof);
+    const bar = cyl(0.05, 0.05, 1.2, toonMat('#78350f'), 7);
+    bar.rotation.z = Math.PI / 2; bar.position.y = 1.35; g.add(bar);
+    const rope = cyl(0.015, 0.015, 0.5, toonMat('#d6d3d1'), 4);
+    rope.position.y = 1.1; g.add(rope);
+    const bucket = cyl(0.12, 0.09, 0.18, toonMat('#a16207'), 8);
+    bucket.position.y = 0.82; g.add(bucket);
+    return g;
+  }
+  function barrel() {
+    const g = new THREE.Group();
+    const woodM = new THREE.MeshToonMaterial({ color: '#b07a2e', map: tex('wood_c'), gradientMap: gradientMap(3) });
+    const body = cyl(0.32, 0.38, 0.72, woodM, 10);
+    body.position.y = 0.36; g.add(body);
+    for (const yy of [0.14, 0.58]) {
+      const hoop = cyl(0.395, 0.395, 0.07, toonMat('#57534e'), 10);
+      hoop.position.y = yy; g.add(hoop);
+    }
+    const lid = cyl(0.33, 0.33, 0.05, toonMat('#8a5a22'), 10);
+    lid.position.y = 0.74; g.add(lid);
     return g;
   }
   function campfire() {
@@ -900,9 +1132,10 @@ const Models = (() => {
   }
 
   return {
-    toonMat, basicMat, gradientMap, capsule, box, sphere, cone, cyl, addOutline,
+    toonMat, basicMat, gradientMap, capsule, box, sphere, cone, cyl, addOutline, tex,
     character, weapon, weaponGlow, enemy, bossDecor,
     tree, rock, crystalMesh, chest, portal, house, campfire, baseCrystal, turret, hpBar,
+    fence, lamp, well, barrel,
     faceTexture, shade, dispose
   };
 })();

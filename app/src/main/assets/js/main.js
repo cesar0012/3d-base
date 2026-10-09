@@ -51,11 +51,11 @@ const Game = (() => {
   function addGold(n) { Save.data.player.gold += Math.floor(n); Save.data.stats.goldEarned += Math.floor(n); UI.renderCurrencies(); Save.save(); }
   function addGems(n) { Save.data.player.gems += Math.floor(n); UI.renderCurrencies(); Save.save(); }
   function spendGold(n) {
-    if (Save.data.player.gold < n) { UI.toast('🪙 Oro insuficiente'); AudioSys.sfx('uiBack'); return false; }
+    if (Save.data.player.gold < n) { UI.toast('Oro insuficiente'); AudioSys.sfx('uiBack'); return false; }
     Save.data.player.gold -= Math.floor(n); UI.renderCurrencies(); Save.save(); return true;
   }
   function spendGems(n) {
-    if (Save.data.player.gems < n) { UI.toast('💎 Gemas insuficientes'); AudioSys.sfx('uiBack'); return false; }
+    if (Save.data.player.gems < n) { UI.toast('Gemas insuficientes'); AudioSys.sfx('uiBack'); return false; }
     Save.data.player.gems -= Math.floor(n); UI.renderCurrencies(); Save.save(); return true;
   }
   function grantReward(r, silent) {
@@ -63,8 +63,8 @@ const Game = (() => {
     if (r.gems) addGems(r.gems);
     if (r.tickets) { Save.data.player.tickets += r.tickets; UI.renderCurrencies(); Save.save(); }
     if (r.xp) addXP(r.xp);
-    if (!silent) UI.toast('🎁 ' + Object.entries(r).map(([k, v]) =>
-      `${k === 'gold' ? '🪙' : k === 'gems' ? '💎' : k === 'tickets' ? '🎟️' : '⭐'}+${U.fmt(v)}`).join('  '));
+    if (!silent) UI.toast(Object.entries(r).map(([k, v]) =>
+      `${Ico.n(k === 'gold' ? 'coin' : k === 'gems' ? 'gem' : k === 'tickets' ? 'ticket' : 'star', 13)} +${U.fmt(v)}`).join('  '));
   }
   function addXP(n) {
     const d = Save.data;
@@ -84,7 +84,7 @@ const Game = (() => {
   function checkLevelUp() {
     if (!pendingLevelUp) return;
     pendingLevelUp = false;
-    UI.bigBanner(`<div class="bb-kicker">NIVEL ${Save.data.player.level}</div><div class="bb-main">⬆ ¡GUARDIÁN MEJORADO!</div>`, 'levelup', 2500);
+    UI.bigBanner(`<div class="bb-kicker">NIVEL ${Save.data.player.level}</div><div class="bb-main">¡GUARDIÁN MEJORADO!</div>`, 'levelup', 2500);
     AudioSys.sfx('levelup');
     grantReward({ gems: 20, gold: 200 * Save.data.player.level }, true);
   }
@@ -166,7 +166,7 @@ const Game = (() => {
     for (const a of DATA.ACHIEVEMENTS) {
       if (!d.achievements[a.id + '_claimed'] && !d.achievements[a.id + '_seen'] && achProgress(a) >= a.goal) {
         d.achievements[a.id + '_seen'] = true;
-        UI.toast(`🏆 Logro completado: ${a.name} — reclama en Misiones`, 3200);
+        UI.toast(`Logro completado: ${a.name} — reclama en Misiones`, 3200);
         AudioSys.sfx('victory');
       }
     }
@@ -341,7 +341,7 @@ const Game = (() => {
   }
   function cycleCamera() {
     const modes = ['third', 'aerial', 'first'];
-    const names = { third: '🎥 3ª Persona', aerial: '🛰 Vista Aérea', first: '👁 1ª Persona' };
+    const names = { third: '3ª Persona', aerial: 'Vista Aérea', first: '1ª Persona' };
     const cur = Engine.CamRig.mode;
     const next = modes[(modes.indexOf(cur) + 1) % 3];
     Engine.CamRig.setMode(next);

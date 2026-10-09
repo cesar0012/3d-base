@@ -37,7 +37,7 @@ const Modes = (() => {
           }, 250);
         } catch (err) {
           console.error(err);
-          UI.toast('⚠️ Error al cargar: ' + err.message);
+          UI.toast('Error al cargar: ' + err.message);
           Game.backToMenu();
         }
       }, 60);
@@ -55,8 +55,9 @@ const Modes = (() => {
       this.props = [];
       this.timers = [];
     }
-    addProp(p, pos, animate) {
+    addProp(p, pos, animate, colR) {
       p.position.copy(pos);
+      if (colR) Engine.addCollider(pos.x, pos.z, colR);
       Engine.scene.add(p);
       if (animate && p.userData.anim) {
         const fn = (t) => { if (p.userData.anim) p.userData.anim(t); };
@@ -150,13 +151,13 @@ const Modes = (() => {
         }
       }
       document.getElementById('wave-info').textContent =
-        this.state === 'wave' ? `🌊 Oleada ${this.wave}/${this.L.waves} · 👹 ${Combat.enemies.length + (this.pendingSpawns ? this.pendingSpawns.length : 0)}` : '';
+        this.state === 'wave' ? `Oleada ${this.wave}/${this.L.waves} · Enemigos: ${Combat.enemies.length + (this.pendingSpawns ? this.pendingSpawns.length : 0)}` : '';
       // fin de oleada
       if (this.state === 'wave' && Combat.enemies.length === 0 && (!this.pendingSpawns || this.pendingSpawns.length === 0)) {
         if (this.wave >= this.L.waves) { this.victory(); }
         else {
           this.state = 'intermission'; this.stateT = 0;
-          UI.toast(`🌊 Oleada superada. Siguiente en 3s...`);
+          UI.toast(`Oleada superada. Siguiente en 3s...`);
           this.later(() => this.startWave(), 3000);
         }
       }
@@ -188,9 +189,9 @@ const Modes = (() => {
         win: true, stars,
         subtitle: `${DATA.REGIONS[L.regionIdx].name} · ${U.mmss(timeSec)}`,
         rows: [
-          ['👹 Enemigos', Combat.killCount],
-          ['⚔️ Mejor combo', Combat.bestCombo],
-          ['❤️ Vida final', Math.round(hpFrac * 100) + '%']
+          ['Enemigos derrotados', Combat.killCount],
+          ['Mejor combo', Combat.bestCombo],
+          ['Vida final', Math.round(hpFrac * 100) + '%']
         ],
         rewards,
         onRetry: () => Game.retry(),
@@ -208,7 +209,7 @@ const Modes = (() => {
       this.later(() => UI.showResults({
         win: false,
         subtitle: `Caíste en la oleada ${this.wave}`,
-        rows: [['👹 Derrotados', Combat.killCount]],
+        rows: [['Derrotados', Combat.killCount]],
         rewards: { gold: Math.floor(Combat.killCount * 4), xp: Math.floor(Combat.killCount * 2) },
         onRetry: () => Game.retry(),
         onMenu: () => Game.backToMenu()
@@ -234,18 +235,18 @@ const Modes = (() => {
       this.spawnPlayer(null, new THREE.Vector3(0, 0, 12));
       // torretas decorativas alrededor
       for (const a of [0.6, 2.4, 4.2]) {
-        this.addProp(Models.turret(), new THREE.Vector3(Math.sin(a) * 9, Engine.groundY(Math.sin(a) * 9, Math.cos(a) * 9), Math.cos(a) * 9), true);
+        this.addProp(Models.turret(), new THREE.Vector3(Math.sin(a) * 9, Engine.groundY(Math.sin(a) * 9, Math.cos(a) * 9), Math.cos(a) * 9), true, 0.8);
       }
       AudioSys.music('meadow');
       UI.modeBanner('Defensa Infinita', 'Sobrevive al asedio eterno');
-      document.getElementById('objective-txt').textContent = '🛡 Protege el Cristal';
+      document.getElementById('objective-txt').textContent = 'Protege el Cristal';
       this.waveInfo();
       UI.updateHUD(0);
     }
     waveInfo() {
       document.getElementById('wave-info').textContent =
-        this.state === 'prep' ? `🛠️ Preparación: ${Math.ceil(this.prepT)}s (Oleada ${this.wave + 1})`
-        : `🌊 Oleada ${this.wave} · 👹 ${Combat.enemies.length} · 💠 ${Math.ceil(this.crystal.hp)}`;
+        this.state === 'prep' ? `Preparación: ${Math.ceil(this.prepT)}s (Oleada ${this.wave + 1})`
+        : `Oleada ${this.wave} · Enemigos: ${Combat.enemies.length} · Cristal: ${Math.ceil(this.crystal.hp)}`;
     }
     startWave() {
       this.wave++;
@@ -300,7 +301,7 @@ const Modes = (() => {
           const bonus = 60 + this.wave * 25;
           Game.addGold(bonus);
           this.runGold += bonus;
-          UI.toast(`✅ Oleada ${this.wave} superada · 🪙 +${bonus}`);
+          UI.toast(`Oleada ${this.wave} superada · +${bonus} de oro`);
           AudioSys.sfx('victory');
           if (this.wave > Save.data.endless.bestWave) {
             Save.data.endless.bestWave = this.wave;
@@ -318,17 +319,17 @@ const Modes = (() => {
     }
     shopOffer() {
       const offers = [
-        { txt: '❤️ Curar 50% (vida)', fn: () => { const p = Combat.player; p.hp = Math.min(p.maxHp, p.hp + p.maxHp * 0.5); AudioSys.sfx('heal'); } },
-        { txt: '⚔️ +15% ataque (esta partida)', fn: () => { Combat.player.atk *= 1.15; AudioSys.sfx('levelup'); } },
-        { txt: '❤️ +25% vida máxima', fn: () => { const p = Combat.player; p.maxHp *= 1.25; p.hp += p.maxHp * 0.2; AudioSys.sfx('levelup'); } },
-        { txt: '⚡ +10% velocidad', fn: () => { Combat.player.spd *= 1.1; AudioSys.sfx('levelup'); } },
-        { txt: '💎 Reparar Cristal 40%', fn: () => { this.crystal.hp = Math.min(this.crystal.maxHp, this.crystal.hp + this.crystal.maxHp * 0.4); AudioSys.sfx('heal'); } },
-        { txt: '🔥 Bomba: daña a todos los enemigos', fn: () => { for (const e of Combat.enemies.slice()) Combat.dealDamage(e, Combat.player.atk * 3, { element: 'fuego' }); VFX.flash('#fb923c', 0.5, 400); AudioSys.sfx('explosion'); } }
+        { txt: 'Curar 50% (vida)', fn: () => { const p = Combat.player; p.hp = Math.min(p.maxHp, p.hp + p.maxHp * 0.5); AudioSys.sfx('heal'); } },
+        { txt: '+15% ataque (esta partida)', fn: () => { Combat.player.atk *= 1.15; AudioSys.sfx('levelup'); } },
+        { txt: '+25% vida máxima', fn: () => { const p = Combat.player; p.maxHp *= 1.25; p.hp += p.maxHp * 0.2; AudioSys.sfx('levelup'); } },
+        { txt: '+10% velocidad', fn: () => { Combat.player.spd *= 1.1; AudioSys.sfx('levelup'); } },
+        { txt: 'Reparar Cristal 40%', fn: () => { this.crystal.hp = Math.min(this.crystal.maxHp, this.crystal.hp + this.crystal.maxHp * 0.4); AudioSys.sfx('heal'); } },
+        { txt: 'Bomba: daña a todos los enemigos', fn: () => { for (const e of Combat.enemies.slice()) Combat.dealDamage(e, Combat.player.atk * 3, { element: 'fuego' }); VFX.flash('#fb923c', 0.5, 400); AudioSys.sfx('explosion'); } }
       ];
       const picks = [];
       while (picks.length < 3 && offers.length) picks.push(offers.splice(Math.floor(Math.random() * offers.length), 1)[0]);
       const box = document.getElementById('wave-shop');
-      box.querySelector('#wave-shop-title').textContent = `🛒 Tienda entre oleadas (${Math.ceil(this.prepT)}s)`;
+      box.querySelector('#wave-shop-title').textContent = `Tienda entre oleadas (${Math.ceil(this.prepT)}s)`;
       box.querySelector('#wave-shop-opts').innerHTML = picks.map((o, i) => `<button class="btn btn-gold" data-i="${i}">${o.txt}</button>`).join('');
       box.classList.add('show');
       box.querySelectorAll('[data-i]').forEach(b => b.onclick = () => {
@@ -356,8 +357,8 @@ const Modes = (() => {
         win: false,
         subtitle: `${cause} · Oleada ${wave}`,
         rows: [
-          ['🌊 Oleadas', wave], ['👹 Derrotados', Combat.killCount],
-          ['🏆 Récord', 'Oleada ' + d.endless.bestWave]
+          ['Oleadas', wave], ['Derrotados', Combat.killCount],
+          ['Récord', 'Oleada ' + d.endless.bestWave]
         ],
         rewards,
         onRetry: () => Game.retry(),
@@ -384,13 +385,13 @@ const Modes = (() => {
       p.spd += this.weaponLvl * 0;
       AudioSys.music('royale');
       UI.modeBanner('Arena Suprema', '20 luchadores · 1 vencedor');
-      document.getElementById('objective-txt').textContent = '👑 Sé el último en pie';
+      document.getElementById('objective-txt').textContent = 'Sé el último en pie';
       // cofres
       for (let i = 0; i < 12; i++) {
         const a = Math.random() * Math.PI * 2, r = U.rand(15, 120);
         const chest = Models.chest();
         const x = Math.sin(a) * r, z = Math.cos(a) * r;
-        this.addProp(chest, new THREE.Vector3(x, Engine.groundY(x, z), z));
+        this.addProp(chest, new THREE.Vector3(x, Engine.groundY(x, z), z), false, 0.45);
         this.chests.push({ mesh: chest, x, z, opened: false });
         this.mapMarkers.push({ x, z });
       }
@@ -410,8 +411,8 @@ const Modes = (() => {
       UI.showTutorialTips();
     }
     updateRoyaleHUD() {
-      document.getElementById('royale-alive').textContent = `👥 ${this.alive}`;
-      document.getElementById('zone-timer').textContent = `⏱ ${U.mmss(this.zone.timer)} · ⭕ ${Math.round(this.zone.r)}m`;
+      document.getElementById('royale-alive').textContent = `Vivos: ${this.alive}`;
+      document.getElementById('zone-timer').textContent = `${U.mmss(this.zone.timer)} · Zona ${Math.round(this.zone.r)}m`;
     }
     update(dt) {
       if (this.over) { Combat.update(dt); return; }
@@ -431,7 +432,7 @@ const Modes = (() => {
         if (p.pos.y <= Engine.groundY(p.pos.x, p.pos.z) + 0.1) {
           this.dropping = false;
           VFX.ring(p.pos, '#38bdf8', 3, 0.5);
-          UI.toast('🪂 ¡Aterrizaje! Busca cofres 💰');
+          UI.toast('¡Aterrizaje! Busca cofres con botín');
         }
         Combat.update(dt * 0.4);
         return;
@@ -447,7 +448,7 @@ const Modes = (() => {
         z.nextR = Math.max(14, z.r * 0.62);
         z.timer = 34 + z.phase * 4;
         z.x = U.rand(-1, 1) * (130 - z.r) * 0.4; z.z = U.rand(-1, 1) * (130 - z.r) * 0.4;
-        UI.toast('⚠️ ¡La zona se encoge!');
+        UI.toast('¡La zona se encoge!');
         AudioSys.sfx('wave');
       } else if (z.timer < 10 && z.r > z.nextR) {
         // transición suave
@@ -456,7 +457,7 @@ const Modes = (() => {
       // daño fuera de zona
       if (U.dist2(p.pos.x, p.pos.z, z.x, z.z) > z.r) {
         p.hp -= (8 + z.phase * 4) * dt;
-        if (Math.random() < dt * 6) VFX.dmgNumber({ x: p.pos.x, y: 2, z: p.pos.z }, '☁', 'player-hit');
+        if (Math.random() < dt * 6) VFX.dmgNumber({ x: p.pos.x, y: 2, z: p.pos.z }, 'ZONA', 'player-hit');
         if (p.hp <= 0 && !p.dead) { Combat.damagePlayer(9999, null); }
       }
       // visual del muro de zona
@@ -480,15 +481,15 @@ const Modes = (() => {
           VFX.burst(c.mesh.position, 22, '#fbbf24', { size: 0.4, speed: 3, up: 5 });
           AudioSys.sfx('chest');
           const roll = Math.random();
-          if (roll < 0.3) { p.atk *= 1.18; this.weaponLvl++; UI.toast(`⚔️ ¡Arma mejorada! Nv.${this.weaponLvl} (+18% ATK)`); }
-          else if (roll < 0.55) { p.hp = Math.min(p.maxHp, p.hp + p.maxHp * 0.45); UI.toast('❤️ ¡Poción de vida!'); AudioSys.sfx('heal'); }
-          else if (roll < 0.75) { p.shieldHp += p.maxHp * 0.5; UI.toast('🛡 ¡Escudo!'); }
+          if (roll < 0.3) { p.atk *= 1.18; this.weaponLvl++; UI.toast(`¡Arma mejorada! Nv.${this.weaponLvl} (+18% ATK)`); }
+          else if (roll < 0.55) { p.hp = Math.min(p.maxHp, p.hp + p.maxHp * 0.45); UI.toast('¡Poción de vida!'); AudioSys.sfx('heal'); }
+          else if (roll < 0.75) { p.shieldHp += p.maxHp * 0.5; UI.toast('¡Escudo!'); }
           else if (roll < 0.9) {
-            UI.toast('💣 ¡Bomba!');
+            UI.toast('¡Bomba!');
             for (const e of Combat.enemies.slice()) if (U.dist2(e.pos.x, e.pos.z, p.pos.x, p.pos.z) < 12) Combat.dealDamage(e, p.atk * 2.5, {});
             VFX.ring(p.pos, '#fb923c', 12, 0.6); AudioSys.sfx('explosion');
           }
-          else { Game.addGems(5); UI.toast('💎 ¡Gemas del cofre!'); }
+          else { Game.addGems(5); UI.toast('¡Gemas del cofre!'); }
           const mi = this.mapMarkers.indexOf(c); if (mi >= 0) this.mapMarkers.splice(mi, 1);
         }
       }
@@ -540,7 +541,7 @@ const Modes = (() => {
             if (!b.byPlayer) {
               b.byPlayer = true;
               this.kills++;
-              UI.addKillFeed(`⚔️ ¡Eliminaste a ${b.name}!`);
+              UI.addKillFeed(`¡Eliminaste a ${b.name}!`);
               AudioSys.sfx('victory');
             }
             b.alive = false; continue;
@@ -555,7 +556,7 @@ const Modes = (() => {
     killBot(b, by) {
       b.alive = false;
       if (b.entity) b.entity.hp = 0, b.entity.dead = true;
-      UI.addKillFeed(`💀 ${b.name} eliminado por ${by}`);
+      UI.addKillFeed(`${b.name} eliminado por ${by}`);
       this.alive--;
     }
     endRun(won) {
@@ -582,8 +583,8 @@ const Modes = (() => {
       Save.save();
       this.later(() => UI.showResults({
         win: won,
-        subtitle: won ? '👑 ¡Último en pie!' : `Puesto #${placement} de 20`,
-        rows: [['👥 Vivos al final', this.alive]],
+        subtitle: won ? '¡Último en pie!' : `Puesto #${placement} de 20`,
+        rows: [['Vivos al final', this.alive]],
         rewards,
         onRetry: () => Game.retry(),
         onMenu: () => Game.backToMenu()
@@ -617,14 +618,29 @@ const Modes = (() => {
       AudioSys.music('meadow');
       Engine.setDayNight(true, 1 / 300);
       UI.modeBanner('Valle Esmeralda', 'Mundo Abierto · Explora y restaura');
-      document.getElementById('objective-txt').textContent = '🗺️ Explora · Habla con los aldeanos';
+      document.getElementById('objective-txt').textContent = 'Explora · Habla con los aldeanos';
 
       /* Aldea */
       const housePos = [[-14, -6], [14, -8], [0, -18]];
       for (const [hx, hz] of housePos) {
-        this.addProp(Models.house('meadow'), new THREE.Vector3(hx, Engine.groundY(hx, hz), hz));
+        this.addProp(Models.house('meadow'), new THREE.Vector3(hx, Engine.groundY(hx, hz), hz), false, 1.75);
       }
-      this.addProp(Models.campfire(), new THREE.Vector3(0, Engine.groundY(0, -2), -2), true);
+      this.addProp(Models.campfire(), new THREE.Vector3(0, Engine.groundY(0, -2), -2), true, 0.55);
+      this.addProp(Models.well(), new THREE.Vector3(5.5, Engine.groundY(5.5, -2), -2), false, 1.1);
+      // farolas alrededor de la plaza
+      for (const [lx, lz] of [[-5, 3], [5, 3], [-5, -12], [6, -12]]) {
+        this.addProp(Models.lamp(), new THREE.Vector3(lx, Engine.groundY(lx, lz), lz), true, 0.35);
+      }
+      // vallas delimitando la plaza
+      const fences = [[-9, 4, 0], [9, 4, 0], [-13, 12, Math.PI / 2], [13, 12, Math.PI / 2]];
+      for (const [fx, fz, rot] of fences) {
+        const f = this.addProp(Models.fence(8), new THREE.Vector3(fx, Engine.groundY(fx, fz), fz));
+        f.rotation.y = rot;
+      }
+      // barriles y detalles junto a las casas
+      for (const [bx, bz] of [[-11.5, -3], [-10.2, -3.2], [12, -4.5], [2.2, -14], [1, -14.4]]) {
+        this.addProp(Models.barrel(), new THREE.Vector3(bx, Engine.groundY(bx, bz), bz), false, 0.42);
+      }
       /* NPCs */
       const npcDefs = [
         { id: 'elder', model: { hair: '#e2e8f0', hairStyle: 'long', outfit: '#7c3aed', outfit2: '#4c1d95', accent: '#fbbf24', skin: '#ffdbac' }, pos: [-6, -8] },
@@ -634,12 +650,17 @@ const Modes = (() => {
       ];
       for (const nd of npcDefs) {
         const c = Models.character(Object.assign({ cape: false }, nd.model));
-        this.addProp(c.group, new THREE.Vector3(nd.pos[0], Engine.groundY(nd.pos[0], nd.pos[1]), nd.pos[1]));
-        // marcador flotante
-        const mark = new THREE.Sprite(new THREE.SpriteMaterial({ map: VFX.glowTex(), color: '#fbbf24', transparent: true, depthWrite: false }));
-        mark.scale.setScalar(0.8); mark.position.y = 2.4;
+        this.addProp(c.group, new THREE.Vector3(nd.pos[0], Engine.groundY(nd.pos[0], nd.pos[1]), nd.pos[1]), false, 0.55);
+        // burbuja de diálogo flotante (canvas con "!")
+        const cv = document.createElement('canvas'); cv.width = cv.height = 64;
+        const cx2 = cv.getContext('2d');
+        cx2.fillStyle = '#fbbf24'; cx2.beginPath(); cx2.arc(32, 26, 18, 0, 7); cx2.fill();
+        cx2.beginPath(); cx2.moveTo(22, 38); cx2.lineTo(32, 56); cx2.lineTo(42, 38); cx2.closePath(); cx2.fill();
+        cx2.fillStyle = '#422006'; cx2.font = 'bold 30px Rubik, sans-serif'; cx2.textAlign = 'center'; cx2.fillText('!', 32, 36);
+        const mark = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), transparent: true, depthWrite: false, depthTest: false }));
+        mark.scale.setScalar(0.55); mark.position.y = 2.35; mark.renderOrder = 15;
         c.group.add(mark);
-        this.npcs.push({ id: nd.id, def: DATA.STORY.npcs[nd.id], group: c.group, x: nd.pos[0], z: nd.pos[1], mark });
+        this.npcs.push({ id: nd.id, def: DATA.STORY.npcs[nd.id], group: c.group, model: c, x: nd.pos[0], z: nd.pos[1], mark, dwell: 0, cooldown: 0 });
       }
       /* Campamentos enemigos */
       const campDefs = [
@@ -653,7 +674,7 @@ const Modes = (() => {
       ];
       for (const cd of campDefs) {
         const gy = Engine.groundY(cd.x, cd.z);
-        const fire = this.addProp(Models.campfire(), new THREE.Vector3(cd.x, gy, cd.z), true);
+        const fire = this.addProp(Models.campfire(), new THREE.Vector3(cd.x, gy, cd.z), true, 0.55);
         for (let i = 0; i < cd.types.length; i++) {
           const a = (i / cd.types.length) * Math.PI * 2;
           const ex = cd.x + Math.sin(a) * 5, ez = cd.z + Math.cos(a) * 5;
@@ -684,12 +705,12 @@ const Modes = (() => {
         this.chests.push({ mesh: ch, x, z, opened: false, respawn: 0 });
       }
       /* Portal decorativo al norte */
-      const portal = this.addProp(Models.portal(), new THREE.Vector3(0, Engine.groundY(0, -130), -130), true);
+      const portal = this.addProp(Models.portal(), new THREE.Vector3(0, Engine.groundY(0, -130), -130), true, 1.5);
 
       /* Historia inicial */
       this.later(() => {
         UI.showDialogue('Voz del Cristal', DATA.STORY.intro.map(s => s.text), () => {
-          UI.toast('🎯 Completa misiones hablando con los aldeanos');
+          UI.toast('Completa misiones hablando con los aldeanos');
         });
       }, 1000);
       this.updateQuestTracker();
@@ -730,7 +751,7 @@ const Modes = (() => {
           if (U.chance(0.3)) Game.addGems(U.randInt(5, 15));
           VFX.burst(c.mesh.position, 18, '#fbbf24', { speed: 3, up: 4 });
           AudioSys.sfx('chest');
-          UI.toast(`💰 Cofre abierto: +${g} oro`);
+          UI.toast(`Cofre abierto: +${g} de oro`);
         }
       }
       /* Fragmentos */
@@ -746,23 +767,31 @@ const Modes = (() => {
           AudioSys.sfx('gem');
           VFX.flash('#22d3ee', 0.4, 500);
           const total = Save.data.explore.shards.length;
-          UI.toast(`💠 Fragmento ${total}/12 recuperado · +25 💎`);
+          UI.toast(`Fragmento ${total}/12 recuperado · +25 gemas`);
           this.updateQuestTracker();
           if (total >= 12) this.finale();
         }
       }
-      /* NPCs cercanos */
+      /* NPCs cercanos: burbuja + botón + auto-diálogo al acercarse */
       this.nearNpc = null;
       for (const n of this.npcs) {
         const d = U.dist2(p.pos.x, p.pos.z, n.x, n.z);
-        n.mark.position.y = 2.4 + Math.sin(Engine.clockT * 2) * 0.15;
+        n.mark.position.y = 2.35 + Math.sin(Engine.clockT * 2.4) * 0.12;
+        n.mark.visible = d < 26;
         n.group.rotation.y = U.angleLerp(n.group.rotation.y, U.angleTo(n.x, n.z, p.pos.x, p.pos.z), dt * 3);
-        if (d < 4) this.nearNpc = n;
+        if (n.model && n.model.tick) n.model.tick(dt);
+        n.cooldown = Math.max(0, n.cooldown - dt);
+        if (d < 5.5) this.nearNpc = n;
+        // auto-inicio de conversación al permanecer muy cerca
+        if (d < 2.8 && n.cooldown <= 0 && !document.getElementById('dlg-box').classList.contains('show')) {
+          n.dwell += dt;
+          if (n.dwell > 0.6) { n.dwell = 0; n.cooldown = 8; this.talkTo(n); }
+        } else if (d > 3.4) n.dwell = 0;
       }
       const talkBtn = document.getElementById('talk-btn');
       if (this.nearNpc) {
         talkBtn.style.display = '';
-        talkBtn.textContent = `💬 ${this.nearNpc.def.name}`;
+        talkBtn.innerHTML = `${Ico.n('chat', 16)} Hablar con ${U.escape(this.nearNpc.def.name)}`;
         talkBtn.onclick = () => this.talkTo(this.nearNpc);
       } else talkBtn.style.display = 'none';
 
@@ -770,13 +799,13 @@ const Modes = (() => {
       for (const q of this.quests) {
         if (q.type === 'kill' && q.done) continue;
       }
-      document.getElementById('wave-info').textContent = `💠 ${Save.data.explore.shards.length}/12 · 👹 ${Combat.enemies.length}`;
+      document.getElementById('wave-info').textContent = `Fragmentos ${Save.data.explore.shards.length}/12 · Enemigos: ${Combat.enemies.length}`;
     }
     onEnemyKilled(e) {
       for (const q of this.quests) {
         if (q.type === 'kill' && !q.done && e.typeId === q.target) {
           q.prog++;
-          if (q.prog >= q.count) { q.done = true; UI.toast(`✅ Misión lista: ${q.name} — reclama en el marcador`); AudioSys.sfx('victory'); }
+          if (q.prog >= q.count) { q.done = true; UI.toast(`Misión lista: ${q.name} — habla con el aldeano`); AudioSys.sfx('victory'); }
           this.updateQuestTracker();
         }
       }
@@ -786,9 +815,9 @@ const Modes = (() => {
       const active = this.quests.filter(q => !q.done).slice(0, 2);
       const shardsLeft = 12 - d.explore.shards.length;
       document.getElementById('quest-tracker').innerHTML =
-        `<div class="qt-title">🗺️ MISIONES</div>` +
+        `<div class="qt-title">MISIONES</div>` +
         active.map(q => `<div class="qt-item">${U.escape(q.text)} <b>${Math.min(q.prog, q.count)}/${q.count}</b></div>`).join('') +
-        `<div class="qt-item">💠 Fragmentos: <b>${d.explore.shards.length}/12</b></div>`;
+        `<div class="qt-item">Fragmentos: <b>${d.explore.shards.length}/12</b></div>`;
     }
     talkTo(npc) {
       // busca misión reclamable de este NPC
@@ -802,7 +831,7 @@ const Modes = (() => {
           claimable.claimed = true;
           Game.grantReward(claimable.reward, true);
           Game.checkLevelUp();
-          UI.toast('🎁 Recompensa de misión reclamada');
+          UI.toast('Recompensa de misión reclamada');
           AudioSys.sfx('gem');
           this.updateQuestTracker();
         }

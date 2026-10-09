@@ -17,12 +17,12 @@ const Engine = (() => {
   let fogColorDay = new THREE.Color(), fogColorNight = new THREE.Color();
 
   const THEMES = {
-    meadow:  { sky: { top: '#2563eb', mid: '#7dd3fc', bot: '#fef3c7' }, fog: '#a8d5f2', sun: '#fff2c8', grass: '#48a860', grass2: '#3d8f52', rock: '#8d9277', water: '#0ea5e9', ambient: '#fbcfe8', hemi: 0.85 },
-    desert:  { sky: { top: '#0284c7', mid: '#fbbf24', bot: '#fde68a' }, fog: '#f2d5a0', sun: '#fff0b8', grass: '#d9a45b', grass2: '#c08b46', rock: '#a97f4e', water: '#0ea5e9', ambient: '#fde68a', hemi: 0.9 },
-    snow:    { sky: { top: '#1e3a8a', mid: '#93c5fd', bot: '#e0f2fe' }, fog: '#cfe4f5', sun: '#eaf4ff', grass: '#e8f2f8', grass2: '#d5e5ef', rock: '#94a9bb', water: '#38bdf8', ambient: '#e0f2fe', hemi: 0.95 },
-    volcano: { sky: { top: '#450a0a', mid: '#b91c1c', bot: '#f97316' }, fog: '#c26a4a', sun: '#ffca8a', grass: '#5b4a44', grass2: '#4a3c38', rock: '#38302b', water: '#ea580c', ambient: '#fdba74', hemi: 0.7 },
-    void:    { sky: { top: '#0f0524', mid: '#4c1d95', bot: '#a78bfa' }, fog: '#6d5b9e', sun: '#d8b4fe', grass: '#4c3a75', grass2: '#3d2f60', rock: '#53417d', water: '#7c3aed', ambient: '#c4b5fd', hemi: 0.6 },
-    royale:  { sky: { top: '#0c4a6e', mid: '#38bdf8', bot: '#fde68a' }, fog: '#a5d8e8', sun: '#fff2c8', grass: '#55a06a', grass2: '#47885a', rock: '#84929e', water: '#0ea5e9', ambient: '#bbf7d0', hemi: 0.85 }
+    meadow:  { sky: { top: '#2563eb', mid: '#7dd3fc', bot: '#fef3c7' }, fog: '#a8d5f2', sun: '#fff2c8', grass: '#48a860', grass2: '#3d8f52', rock: '#8d9277', water: '#0ea5e9', ambient: '#fbcfe8', hemi: 0.85, tex: 'grass' },
+    desert:  { sky: { top: '#0284c7', mid: '#fbbf24', bot: '#fde68a' }, fog: '#f2d5a0', sun: '#fff0b8', grass: '#d9a45b', grass2: '#c08b46', rock: '#a97f4e', water: '#0ea5e9', ambient: '#fde68a', hemi: 0.9, tex: 'ground' },
+    snow:    { sky: { top: '#1e3a8a', mid: '#93c5fd', bot: '#e0f2fe' }, fog: '#cfe4f5', sun: '#eaf4ff', grass: '#e8f2f8', grass2: '#d5e5ef', rock: '#94a9bb', water: '#38bdf8', ambient: '#e0f2fe', hemi: 0.95, tex: 'snow' },
+    volcano: { sky: { top: '#450a0a', mid: '#b91c1c', bot: '#f97316' }, fog: '#c26a4a', sun: '#ffca8a', grass: '#5b4a44', grass2: '#4a3c38', rock: '#38302b', water: '#ea580c', ambient: '#fdba74', hemi: 0.7, tex: 'rock' },
+    void:    { sky: { top: '#0f0524', mid: '#4c1d95', bot: '#a78bfa' }, fog: '#6d5b9e', sun: '#d8b4fe', grass: '#4c3a75', grass2: '#3d2f60', rock: '#53417d', water: '#7c3aed', ambient: '#c4b5fd', hemi: 0.6, tex: 'rock' },
+    royale:  { sky: { top: '#0c4a6e', mid: '#38bdf8', bot: '#fde68a' }, fog: '#a5d8e8', sun: '#fff2c8', grass: '#55a06a', grass2: '#47885a', rock: '#84929e', water: '#0ea5e9', ambient: '#bbf7d0', hemi: 0.85, tex: 'grass' }
   };
 
   /* ---------- Init ---------- */
@@ -89,7 +89,7 @@ const Engine = (() => {
       }
     });
     scene.remove(worldRoot);
-    worldRoot = null; animProps = []; terrainMesh = null; waterMesh = null; grassMat = null;
+    worldRoot = null; animProps = []; terrainMesh = null; waterMesh = null; grassMat = null; colliders = [];
     if (skyMesh) { scene.remove(skyMesh); skyMesh = null; }
     if (sun) { scene.remove(sun); sun = null; }
     if (starField) { scene.remove(starField); starField = null; }
@@ -130,6 +130,7 @@ const Engine = (() => {
     const cGrass = new THREE.Color(T.grass), cGrass2 = new THREE.Color(T.grass2);
     const cRock = new THREE.Color(T.rock);
     const cPath = new THREE.Color(shadeHex(T.grass, 14));
+    const WHITE = new THREE.Color('#ffffff');
     const colorArr = new Float32Array(pos.count * 3);
     const tmpC = new THREE.Color();
     for (let i = 0; i < pos.count; i++) {
@@ -148,14 +149,22 @@ const Engine = (() => {
       // tinte por altura (cumbres más claras)
       tmpC.offsetHSL(0, 0, U.clamp(y * 0.008, 0, 0.07));
       if (Math.abs(x) < 4.5 && Math.abs(z) < 26) tmpC.lerp(cPath, 0.55); // camino central
+      // aclarar el tinte para que la textura fotográfica aporte el color base
+      tmpC.lerp(WHITE, 0.62);
       colorArr[i * 3] = tmpC.r; colorArr[i * 3 + 1] = tmpC.g; colorArr[i * 3 + 2] = tmpC.b;
     }
     geo.setAttribute('color', new THREE.BufferAttribute(colorArr, 3));
     geo.computeVertexNormals();
-    // Textura de detalle multiplicada sobre el color del vértice: da grano al suelo
-    const detail = detailTexture();
-    detail.repeat.set(worldSize / 6, worldSize / 6);
-    const groundMat = new THREE.MeshToonMaterial({ vertexColors: true, map: detail, gradientMap: Models.gradientMap(3) });
+    // Texturas PBR CC0 (ambientCG) empaquetadas: color × tinte del vértice + normal map
+    const texName = T.tex || 'grass';
+    const cTex = Models.tex(texName + '_c');
+    const nTex = Models.tex(texName + '_n');
+    const tile = worldSize / 13;
+    cTex.repeat.set(tile, tile); nTex.repeat.set(tile, tile);
+    const groundMat = new THREE.MeshToonMaterial({
+      vertexColors: true, map: cTex, gradientMap: Models.gradientMap(3)
+    });
+    if (nTex) { groundMat.normalMap = nTex; groundMat.normalScale = new THREE.Vector2(0.55, 0.55); }
     terrainMesh = new THREE.Mesh(geo, groundMat);
     if (quality === 'high') { terrainMesh.receiveShadow = true; }
     worldRoot.add(terrainMesh);
@@ -168,6 +177,7 @@ const Engine = (() => {
     }
 
     /* Vegetación / props */
+    clearColliders();
     const rng = U.seeded(opts.seed || 12345);
     /* Campo de hierba con viento */
     const grass = buildGrassField(themeName, worldSize, rng, opts);
@@ -180,6 +190,7 @@ const Engine = (() => {
       const tr = Models.tree(themeName, rng);
       tr.position.set(x, heightFn(x, z), z);
       worldRoot.add(tr);
+      addCollider(x, z, 0.75); // tronco
     }
     const nRocks = quality === 'low' ? 12 : 26;
     for (let i = 0; i < nRocks; i++) {
@@ -188,6 +199,7 @@ const Engine = (() => {
       const rk = Models.rock(themeName, rng);
       rk.position.set(x, heightFn(x, z), z);
       worldRoot.add(rk);
+      addCollider(x, z, 1.0);
     }
 
     /* Partículas ambientales */
@@ -213,13 +225,16 @@ const Engine = (() => {
     const scale = opts.hilliness !== undefined ? opts.hilliness : 1;
     const size = opts.size || 300;
     const half = size / 2;
+    // semilla por mundo para que cada partida tenga desniveles distintos
+    const o1 = (opts.seed || 0) % 7 * 0.7, o2 = (opts.seed || 0) % 13 * 0.5;
     return (x, z) => {
-      let h = Math.sin(x * 0.028) * Math.cos(z * 0.024) * 2.6 * scale
-            + Math.sin(x * 0.011 + 2.1) * Math.cos(z * 0.013) * 4.2 * scale
-            + Math.sin(x * 0.15) * Math.sin(z * 0.12) * 0.35 * scale;
-      // Zona central plana (base)
+      let h = Math.sin(x * 0.028 + o1) * Math.cos(z * 0.024) * 3.4 * scale
+            + Math.sin(x * 0.011 + 2.1 + o2) * Math.cos(z * 0.013) * 5.6 * scale
+            + Math.sin(x * 0.065 + o2) * Math.cos(z * 0.058 + o1) * 1.7 * scale
+            + Math.sin(x * 0.15) * Math.sin(z * 0.12) * 0.5 * scale;
+      // Zona central plana (base) — más reducida para que el relieve llegue cerca
       const d = Math.hypot(x, z);
-      const flat = U.clamp((d - 16) / 22, 0, 1);
+      const flat = U.clamp((d - 13) / 15, 0, 1);
       h *= 0.15 + 0.85 * flat;
       if (opts.island) {
         // caída hacia el borde para isla
@@ -228,6 +243,24 @@ const Engine = (() => {
       }
       return h;
     };
+  }
+
+  /* ---------- Colisiones circulares del mundo ---------- */
+  let colliders = [];
+  function addCollider(x, z, r) { colliders.push({ x, z, r }); }
+  function clearColliders() { colliders = []; }
+  function resolveCollisions(px, pz, radius) {
+    for (const c of colliders) {
+      const dx = px - c.x, dz = pz - c.z;
+      const d2 = dx * dx + dz * dz;
+      const min = c.r + radius;
+      if (d2 < min * min) {
+        const d = Math.sqrt(d2) || 0.001;
+        const push = min - d;
+        px += dx / d * push; pz += dz / d * push;
+      }
+    }
+    return [px, pz];
   }
 
   /* ---------- Textura de detalle del suelo (grano neutro multiplicativo) ---------- */
@@ -558,6 +591,7 @@ const Engine = (() => {
   return {
     init, buildWorld, clearWorld, groundY, registerAnim, unregisterAnim,
     setDayNight, setTimeOfDay,
+    addCollider, clearColliders, resolveCollisions,
     CamRig, blobShadow, removeBlobShadow, update,
     THEMES, get scene() { return scene; }, get camera() { return camera; },
     get renderer() { return renderer; }, get quality() { return quality; },

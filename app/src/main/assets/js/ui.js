@@ -64,7 +64,7 @@ const UI = (() => {
       </div>`;
     const evs = DATA.activeEvents();
     el('menu-events-strip').innerHTML = evs.length
-      ? evs.map(e => `<div class="event-chip">${e.icon} ${esc(e.name)}</div>`).join('')
+      ? evs.map(e => `<div class="event-chip">${Ico.n(e.icon, 12)} ${esc(e.name)}</div>`).join('')
       : `<div class="event-chip dim">Sin eventos hoy</div>`;
     checkLoginPopup();
     checkNewsPopup();
@@ -88,7 +88,7 @@ const UI = (() => {
     const el_ = DATA.ELEMENTS[h.element];
     return `<div class="hero-badge" style="width:${size}px;height:${size}px;border-color:${r.color};box-shadow:0 0 ${size / 6}px ${r.glow}55">
       <div class="hb-face" style="background:linear-gradient(160deg,${h.model.outfit},${h.model.outfit2})">
-        <span style="font-size:${size * 0.42}px">${el_.icon}</span>
+        <span class="hb-el">${Ico.n(el_.icon, Math.max(12, Math.round(size * 0.4)))}</span>
       </div>
       <span class="hb-rar" style="background:${r.color}">${h.rarity}</span>
     </div>`;
@@ -105,15 +105,15 @@ const UI = (() => {
     const dayIdx = ((d.login.streak - 1) % 7);
     const reward = DATA.LOGIN_REWARDS[dayIdx];
     const items = Object.entries(reward.item).map(([k, v]) =>
-      `<span class="rew-item">${k === 'gold' ? '🪙' : k === 'gems' ? '💎' : '🎟️'} +${U.fmt(v)}</span>`).join('');
+      `<span class="rew-item">${Ico.n(k === 'gold' ? 'coin' : k === 'gems' ? 'gem' : 'ticket', 13)} +${U.fmt(v)}</span>`).join('');
     el('login-body').innerHTML = `
-      <div class="login-streak">Día ${dayIdx + 1} de 7 · Racha: ${d.login.streak} 🔥</div>
+      <div class="login-streak">Día ${dayIdx + 1} de 7 · Racha: ${d.login.streak}</div>
       <div class="login-calendar">${DATA.LOGIN_REWARDS.map((r, i) => {
         const claimed = i < dayIdx;
         const isToday = i === dayIdx;
         return `<div class="cal-day ${claimed ? 'claimed' : ''} ${isToday ? 'today' : ''}">
           <span class="cal-num">${r.day}</span>
-          <span class="cal-rew">${r.item.gold ? '🪙' + U.fmt(r.item.gold) : r.item.gems ? '💎' + r.item.gems : '🎟️' + r.item.tickets}</span>
+          <span class="cal-rew">${Ico.n(r.item.gold ? 'coin' : r.item.gems ? 'gem' : 'ticket', 12)} ${U.fmt(r.item.gold || r.item.gems || r.item.tickets)}</span>
         </div>`;
       }).join('')}</div>
       <div class="login-reward">Hoy recibes: ${items}</div>`;
@@ -134,16 +134,16 @@ const UI = (() => {
     d.events.seenNews = true; Save.save();
     setTimeout(() => {
       el('news-body').innerHTML = `
-        <p><b>⚔️ AETHERIA 2.0 — Guardianes del Cristal</b></p>
+        <p><b>AETHERIA 2.1 — Guardianes del Cristal</b></p>
         <p>Nueva versión total del juego:</p>
         <ul style="text-align:left;display:inline-block">
-          <li>📖 Campaña con 25 niveles y 6 jefes</li>
-          <li>🏰 Defensa Infinita mejorada</li>
-          <li>👑 Arena Suprema (battle royale)</li>
-          <li>🗺️ Mundo Abierto con historia</li>
-          <li>🎭 8 héroes coleccionables + gacha</li>
-          <li>🗡️ Armas y armaduras con mejoras</li>
-          <li>🎥 3 modos de cámara, ciclo día/noche</li>
+          <li>Campaña con 25 niveles y 6 jefes</li>
+          <li>Defensa Infinita mejorada</li>
+          <li>Arena Suprema (battle royale)</li>
+          <li>Mundo Abierto con historia</li>
+          <li>8 héroes coleccionables + gacha</li>
+          <li>Armas y armaduras con mejoras</li>
+          <li>3 modos de cámara, ciclo día/noche</li>
         </ul>`;
       showOverlay('news');
       el('news-ok').onclick = () => hideOverlay('news');
@@ -164,7 +164,7 @@ const UI = (() => {
         ${heroBadge(h.id, 62)}
         <div class="hc-name" style="color:${r.color}">${esc(h.name)}</div>
         <div class="hc-title">${esc(h.title)}</div>
-        ${owned ? `<div class="hc-lvl">Nv. ${d.heroes.levels[h.id] || 1}</div>` : `<div class="hc-lock">🔒 Invocar</div>`}
+        ${owned ? `<div class="hc-lvl">Nv. ${d.heroes.levels[h.id] || 1}</div>` : `<div class="hc-lock">${Ico.n('lock', 11)} Invocar</div>`}
         ${active ? '<div class="hc-active">ACTIVO</div>' : ''}
       </div>`;
     }).join('');
@@ -198,16 +198,16 @@ const UI = (() => {
         if (aId && DATA.ARMOR[aId]) {
           const a = DATA.ARMOR[aId], ap = d.armor.upg[aId] || 0;
           return `<div class="loadout-slot filled" data-slot="${slot}" style="border-color:${DATA.RARITY[a.rarity].color}">
-            <span class="ls-ico">${slot === 'head' ? '⛑' : slot === 'chest' ? '🛡' : '👢'}</span>
+            <span class="ls-ico">${Ico.n(slot === 'head' ? 'helmet' : slot === 'chest' ? 'shield' : 'boot', 18)}</span>
             <span class="ls-name">${esc(a.name)}${ap ? ' +' + ap : ''}</span></div>`;
         }
-        return `<div class="loadout-slot" data-slot="${slot}"><span class="ls-ico">${slot === 'head' ? '⛑' : slot === 'chest' ? '🛡' : '👢'}</span><span class="ls-name">Vacío</span></div>`;
+        return `<div class="loadout-slot" data-slot="${slot}"><span class="ls-ico">${Ico.n(slot === 'head' ? 'helmet' : slot === 'chest' ? 'shield' : 'boot', 18)}</span><span class="ls-name">Vacío</span></div>`;
       }).join('');
       loadoutHtml = `
         <div class="section-title">EQUIPO</div>
         <div class="loadout-row">
           <div class="loadout-slot filled weapon" data-slot="weapon" style="border-color:${DATA.RARITY[w.rarity].color}">
-            <span class="ls-ico">⚔</span><span class="ls-name">${esc(w.name)}${wPlus ? ' +' + wPlus : ''}</span></div>
+            <span class="ls-ico">${Ico.n('sword', 18)}</span><span class="ls-name">${esc(w.name)}${wPlus ? ' +' + wPlus : ''}</span></div>
           ${armorSlots}
         </div>
         <div class="hint">Toca un espacio para cambiarlo (Armería → Equipar)</div>`;
@@ -218,26 +218,26 @@ const UI = (() => {
         ${heroBadge(h.id, 72)}
         <div class="hd-info">
           <div class="hd-name" style="color:${r.color}">${esc(h.name)}</div>
-          <div class="hd-title">${esc(h.title)} · ${esc(h.cls)} · <span style="color:${el_.color}">${el_.icon} ${el_.name}</span></div>
-          ${owned ? `<div class="hd-lvl">Nivel ${lvl}</div>` : `<div class="hd-locked">🔒 No reclutado — Invócalo en la Grieta</div>`}
+          <div class="hd-title">${esc(h.title)} · ${esc(h.cls)} · <span style="color:${el_.color}">${Ico.n(el_.icon, 12)} ${el_.name}</span></div>
+          ${owned ? `<div class="hd-lvl">Nivel ${lvl}</div>` : `<div class="hd-locked">${Ico.n('lock', 11)} No reclutado — Invócalo en la Grieta</div>`}
         </div>
       </div>
       <div class="hd-desc">${esc(h.desc)}</div>
       ${owned ? `
       <div class="stats-grid">
-        <div class="stat"><span>❤️ Vida</span><b>${U.fmt(st.hp)}</b></div>
-        <div class="stat"><span>⚔ Ataque</span><b>${U.fmt(st.atk)}</b></div>
-        <div class="stat"><span>🛡 Defensa</span><b>${U.fmt(st.def)}</b></div>
-        <div class="stat"><span>⚡ Velocidad</span><b>${st.spd.toFixed(1)}</b></div>
-        <div class="stat"><span>✨ Crítico</span><b>${Math.round(st.crit * 100)}%</b></div>
+        <div class="stat"><span>${Ico.n('heart',12)} Vida</span><b>${U.fmt(st.hp)}</b></div>
+        <div class="stat"><span>${Ico.n('sword',12)} Ataque</span><b>${U.fmt(st.atk)}</b></div>
+        <div class="stat"><span>${Ico.n('shield',12)} Defensa</span><b>${U.fmt(st.def)}</b></div>
+        <div class="stat"><span>${Ico.n('zap',12)} Velocidad</span><b>${st.spd.toFixed(1)}</b></div>
+        <div class="stat"><span>${Ico.n('spark',12)} Crítico</span><b>${Math.round(st.crit * 100)}%</b></div>
       </div>
       <div class="skills-row">
-        ${[h.skill1, h.skill2].map(sid => { const s = DATA.SKILLS[sid]; return `<div class="skill-info"><span class="si-icon">${s.icon}</span><div><b>${esc(s.name)}</b> <small>(${s.cd}s)</small><br><small>${esc(s.desc)}</small></div></div>`; }).join('')}
-        <div class="skill-info ult"><span class="si-icon">${DATA.ULTS[h.ult].icon}</span><div><b>${esc(DATA.ULTS[h.ult].name)}</b> <small>(Definitiva)</small><br><small>${esc(DATA.ULTS[h.ult].desc)}</small></div></div>
+        ${[h.skill1, h.skill2].map(sid => { const s = DATA.SKILLS[sid]; return `<div class="skill-info"><span class="si-icon">${Ico.n(s.icon, 24)}</span><div><b>${esc(s.name)}</b> <small>(${s.cd}s)</small><br><small>${esc(s.desc)}</small></div></div>`; }).join('')}
+        <div class="skill-info ult"><span class="si-icon">${Ico.n(DATA.ULTS[h.ult].icon, 24)}</span><div><b>${esc(DATA.ULTS[h.ult].name)}</b> <small>(Definitiva)</small><br><small>${esc(DATA.ULTS[h.ult].desc)}</small></div></div>
       </div>
       ${loadoutHtml}
       <div class="hd-actions">
-        <button class="btn btn-gold" id="hero-upg">⬆ Subir Nv. (${U.fmt(upCost)} 🪙)</button>
+        <button class="btn btn-gold" id="hero-upg">${Ico.n('arrowup',13)} Subir Nv. (${U.fmt(upCost)} ${Ico.n('coin',12)})</button>
         <button class="btn btn-blue" id="hero-select">★ Hacer Activo</button>
       </div>` : `
       <div class="hd-actions"><button class="btn btn-purple" id="hero-gacha-go">✨ Ir a Invocación</button></div>`}
@@ -283,7 +283,7 @@ const UI = (() => {
       const r = DATA.RARITY[it.rarity];
       const plus = (isWeapon ? d.weapons.upg[id] : d.armor.upg[id]) || 0;
       const cur = (d.loadout[heroId] || {})[slot] === id;
-      const stat = isWeapon ? `⚔ ${DATA.weaponAtk(id, plus)}` : `🛡 ${DATA.armorStats(id, plus).def} · ❤️ ${DATA.armorStats(id, plus).hp}`;
+      const stat = isWeapon ? `${Ico.n('sword', 12)} ${DATA.weaponAtk(id, plus)}` : `${Ico.n('shield', 12)} ${DATA.armorStats(id, plus).def} · ${Ico.n('heart', 12)} ${DATA.armorStats(id, plus).hp}`;
       const bonus = isWeapon && it.type === DATA.HEROES[heroId].weaponType ? '<span class="cls-bonus">+15% clase</span>' : '';
       return `<div class="picker-item ${cur ? 'current' : ''}" data-id="${id}" style="border-color:${r.color}">
         <div><b style="color:${r.color}">${esc(it.name)}${plus ? ' +' + plus : ''}</b><br><small>${stat} ${bonus}</small></div>
@@ -308,8 +308,8 @@ const UI = (() => {
   function renderArmory() {
     const d = Save.data;
     el('armory-tabs').innerHTML = `
-      <button class="tab ${armoryTab === 'weapons' ? 'on' : ''}" data-t="weapons">⚔ Armas</button>
-      <button class="tab ${armoryTab === 'armor' ? 'on' : ''}" data-t="armor">🛡 Armaduras</button>`;
+      <button class="tab ${armoryTab === 'weapons' ? 'on' : ''}" data-t="weapons">${Ico.n('sword',13)} Armas</button>
+      <button class="tab ${armoryTab === 'armor' ? 'on' : ''}" data-t="armor">${Ico.n('shield',13)} Armaduras</button>`;
     el('armory-tabs').querySelectorAll('.tab').forEach(t => t.onclick = () => { armoryTab = t.dataset.t; renderArmory(); });
 
     const grid = el('armory-grid');
@@ -323,18 +323,18 @@ const UI = (() => {
         const equipped = Object.values(d.loadout).some(l => l && l.weapon === w.id);
         return `<div class="item-card" style="border-color:${r.color}">
           <div class="ic-top"><b style="color:${r.color}">${esc(w.name)}</b>${plus ? `<span class="plus">+${plus}</span>` : ''}</div>
-          <div class="ic-ico">${weaponIcon(w.type)}</div>
+          <div class="ic-ico">${Ico.n(weaponIcon(w.type), 32)}</div>
           <div class="ic-stats">
-            ⚔ ${DATA.weaponAtk(w.id, plus)} · ⚡ ${(w.spd * 10).toFixed(0) / 10} · ✨ ${Math.round(w.crit * 100)}%
-            ${w.element ? ` · <span style="color:${DATA.ELEMENTS[w.element].color}">${DATA.ELEMENTS[w.element].icon}</span>` : ''}
+            ${Ico.n('sword',12)} ${DATA.weaponAtk(w.id, plus)} · ${Ico.n('zap',12)} ${(w.spd * 10).toFixed(0) / 10} · ${Ico.n('spark',12)} ${Math.round(w.crit * 100)}%
+            ${w.element ? ` · <span style="color:${DATA.ELEMENTS[w.element].color}">${Ico.n(w.element, 13)}</span>` : ''}
           </div>
           <div class="ic-actions">
             ${owned
-              ? `<button class="btn btn-small btn-gold" data-upg="${w.id}" ${d.player.gold < upCost ? 'disabled' : ''}>⬆ ${U.fmt(upCost)}🪙</button>
+              ? `<button class="btn btn-small btn-gold" data-upg="${w.id}" ${d.player.gold < upCost ? 'disabled' : ''}>${Ico.n('arrowup',11)} ${U.fmt(upCost)} ${Ico.n('coin',11)}</button>
                  <button class="btn btn-small btn-blue" data-equip="${w.id}">Equipar</button>
                  ${equipped ? '<span class="eq-mark">✓ en uso</span>' : ''}`
               : `<button class="btn btn-small ${canBuy ? 'btn-green' : 'btn-grey'}" data-buy="${w.id}" ${canBuy ? '' : 'disabled'}>
-                   ${d.player.level < w.lvlReq ? 'Nv. ' + w.lvlReq : '🪙 ' + U.fmt(w.price)}</button>`}
+                   ${d.player.level < w.lvlReq ? 'Nv. ' + w.lvlReq : Ico.n('coin', 11) + ' ' + U.fmt(w.price)}</button>`}
           </div>
         </div>`;
       }).join('');
@@ -370,13 +370,13 @@ const UI = (() => {
         return `<div class="item-card" style="border-color:${r.color}">
           <div class="ic-top"><b style="color:${r.color}">${esc(a.name)}</b>${plus ? `<span class="plus">+${plus}</span>` : ''}
             <span class="slot-tag">${DATA.ARMOR_SLOTS[a.slot]}</span></div>
-          <div class="ic-ico">${a.slot === 'head' ? '⛑' : a.slot === 'chest' ? '🛡' : '👢'}</div>
-          <div class="ic-stats">🛡 ${st.def} · ❤️ ${U.fmt(st.hp)}${st.spd ? ` · ⚡ +${st.spd}` : ''}</div>
+          <div class="ic-ico">${Ico.n(a.slot === 'head' ? 'helmet' : a.slot === 'chest' ? 'shield' : 'boot', 32)}</div>
+          <div class="ic-stats">${Ico.n('shield',12)} ${st.def} · ${Ico.n('heart',12)} ${U.fmt(st.hp)}${st.spd ? ` · ${Ico.n('zap',12)} +${st.spd}` : ''}</div>
           <div class="ic-actions">
             ${owned
-              ? `<button class="btn btn-small btn-gold" data-upg="${a.id}" ${d.player.gold < upCost ? 'disabled' : ''}>⬆ ${U.fmt(upCost)}🪙</button>
+              ? `<button class="btn btn-small btn-gold" data-upg="${a.id}" ${d.player.gold < upCost ? 'disabled' : ''}>${Ico.n('arrowup',11)} ${U.fmt(upCost)} ${Ico.n('coin',11)}</button>
                  <button class="btn btn-small btn-blue" data-equip="${a.id}">Equipar</button>`
-              : `<button class="btn btn-small ${canBuy ? 'btn-green' : 'btn-grey'}" data-buy="${a.id}" ${canBuy ? '' : 'disabled'}>🪙 ${U.fmt(a.price)}</button>`}
+              : `<button class="btn btn-small ${canBuy ? 'btn-green' : 'btn-grey'}" data-buy="${a.id}" ${canBuy ? '' : 'disabled'}>${Ico.n('coin', 11)}  ${U.fmt(a.price)}</button>`}
           </div>
         </div>`;
       }).join('');
@@ -403,7 +403,7 @@ const UI = (() => {
     }
   }
   function weaponIcon(type) {
-    return { espada: '🗡', mandoble: '⚔', lanza: '🔱', arco: '🏹', baston: '🪄', dagas: '🔪', martillo: '🔨' }[type] || '⚔';
+    return { espada: 'sword', mandoble: 'swords', lanza: 'spear', arco: 'bow', baston: 'staff', dagas: 'dagger', martillo: 'hammer' }[type] || 'sword';
   }
 
   /* ============ Gacha ============ */
@@ -427,12 +427,12 @@ const UI = (() => {
         <span style="color:${DATA.RARITY.SR.color}">SR 10%</span>
         <span style="color:${DATA.RARITY.R.color}">R 86%</span>
       </div>
-      <div class="pity-info">🛡 Garantizado SR+ cada ${DATA.GACHA.pity4At} · ✨ Garantizado SSR+ cada ${DATA.GACHA.pity5At}
+      <div class="pity-info">${Ico.n('shield',12)} Garantizado SR+ cada ${DATA.GACHA.pity4At} · ${Ico.n('spark',12)} Garantizado SSR+ cada ${DATA.GACHA.pity5At}
         <br>Actual: <b>${d.gacha.pity4}</b> / <b>${d.gacha.pity5}</b></div>`;
-    el('gacha-single-ticket').innerHTML = `🎟️ x1 <small>(tienes ${d.player.tickets})</small>`;
-    el('gacha-ten-ticket').innerHTML = `🎟️ x10 <small>(tienes ${d.player.tickets})</small>`;
-    el('gacha-single-gems').innerHTML = `💎 150`;
-    el('gacha-ten-gems').innerHTML = `💎 1350 <span class="disc">-10%</span>`;
+    el('gacha-single-ticket').innerHTML = `${Ico.n('ticket',14)} x1 <small>(tienes ${d.player.tickets})</small>`;
+    el('gacha-ten-ticket').innerHTML = `${Ico.n('ticket',14)} x10 <small>(tienes ${d.player.tickets})</small>`;
+    el('gacha-single-gems').innerHTML = `${Ico.n('gem',14)} 150`;
+    el('gacha-ten-gems').innerHTML = `${Ico.n('gem',14)} 1350 <span class="disc">-10%</span>`;
   }
 
   function rollRarity() {
@@ -499,7 +499,7 @@ const UI = (() => {
         ${heroBadge(h.id, 58)}
         <div class="pc-name" style="color:${rc.color}">${esc(h.name)}</div>
         <div class="pc-rar">${rc.name}</div>
-        ${r.dupe ? `<div class="pc-dupe">Repetido → 💎+${r.gems}</div>` : `<div class="pc-new">¡NUEVO!</div>`}
+        ${r.dupe ? `<div class="pc-dupe">Repetido → ${Ico.n('gem',11)} +${r.gems}</div>` : `<div class="pc-new">¡NUEVO!</div>`}
       </div>`;
     }).join('');
     showOverlay('gacha-results');
@@ -513,7 +513,7 @@ const UI = (() => {
     el('map-region-tabs').innerHTML = DATA.REGIONS.map((r, i) => {
       const unlocked = i === 0 || d.campaign.unlocked > i * 5;
       return `<button class="tab region-tab ${i === mapRegion ? 'on' : ''} ${unlocked ? '' : 'locked'}" data-i="${i}" style="${i === mapRegion ? `border-color:${r.color}` : ''}">
-        ${unlocked ? r.name : '🔒 ' + r.name}</button>`;
+        ${unlocked ? r.name : Ico.n('lock', 11) + ' ' + r.name}</button>`;
     }).join('');
     el('map-region-tabs').querySelectorAll('.tab').forEach(t => t.onclick = () => {
       const i = +t.dataset.i;
@@ -536,8 +536,8 @@ const UI = (() => {
       const left = 50 + Math.sin(i * 1.7 + mapRegion) * 26;
       return `<div class="map-node ${unlocked ? '' : 'locked'} ${isBoss ? 'boss' : ''}" data-lvl="${l.id}"
           style="top:${top}%;left:${left}%;--c:${reg.color}">
-        ${unlocked ? `<div class="mn-stars">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</div>` : '<div class="mn-lock">🔒</div>'}
-        <div class="mn-circle">${isBoss ? '👑' : l.id}</div>
+        ${unlocked ? `<div class="mn-stars">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</div>` : `<div class="mn-lock">${Ico.n('lock',13)}</div>`}
+        <div class="mn-circle">${isBoss ? Ico.n('crown',20) : l.id}</div>
         <div class="mn-label">${isBoss ? esc((DATA.BOSSES[bossId] || {}).name || 'Jefe') : 'Nv. ' + l.id}</div>
       </div>`;
     }).join('') + levels.slice(0, -1).map((l, i) => {
@@ -549,7 +549,7 @@ const UI = (() => {
     el('map-nodes').querySelectorAll('.map-node').forEach(n => {
       n.onclick = () => {
         const id = +n.dataset.lvl;
-        if (d.campaign.unlocked < id) { toast('🔒 Completa niveles anteriores'); AudioSys.sfx('uiBack'); return; }
+        if (d.campaign.unlocked < id) { toast('Completa los niveles anteriores'); AudioSys.sfx('uiBack'); return; }
         openLevelPopup(id);
       };
     });
@@ -562,17 +562,17 @@ const UI = (() => {
     const rew = d.campaign.stars[id] ? L.rewards.replay : L.rewards.first;
     const stars = d.campaign.stars[id] || 0;
     el('level-pop-body').innerHTML = `
-      <h3 style="color:${DATA.REGIONS[L.regionIdx].color}">${L.idxInRegion === 5 ? '👑 ' : ''}${esc(L.name)}</h3>
+      <h3 style="color:${DATA.REGIONS[L.regionIdx].color}">${L.idxInRegion === 5 ? Ico.n('crown', 15) + ' ' : ''}${esc(L.name)}</h3>
       <div class="lp-region">${DATA.REGIONS[L.regionIdx].name}</div>
       <div class="lp-stats">
-        <span>⚡ Poder recomendado: <b>${U.fmt(L.power)}</b></span>
-        <span>🌊 Oleadas: <b>${L.waves}</b></span>
-        ${L.idxInRegion === 5 ? '<span>⚠️ <b>Nivel de JEFE</b></span>' : ''}
+        <span>${Ico.n('zap',12)} Poder recomendado: <b>${U.fmt(L.power)}</b></span>
+        <span>${Ico.n('radar',12)} Oleadas: <b>${L.waves}</b></span>
+        ${L.idxInRegion === 5 ? `<span>${Ico.n('warn',12)} <b>Nivel de JEFE</b></span>` : ''}
       </div>
       <div class="lp-stars">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</div>
       <div class="lp-rew">
-        <span>🪙 ${U.fmt(rew.gold)}</span><span>💎 ${rew.gems}</span><span>⭐ ${rew.xp} XP</span>
-        ${rew.tickets ? `<span>🎟️ ${rew.tickets}</span>` : ''}
+        <span>${Ico.n('coin', 13)} ${U.fmt(rew.gold)}</span><span>${Ico.n('gem', 13)} ${rew.gems}</span><span>${Ico.n('star', 13)} ${rew.xp} XP</span>
+        ${rew.tickets ? `<span>${Ico.n('ticket', 13)} ${rew.tickets}</span>` : ''}
       </div>
       ${L.intro ? `<div class="lp-intro">${esc(L.intro)}</div>` : ''}`;
     showOverlay('level-pop');
@@ -589,9 +589,9 @@ const UI = (() => {
     Game.ensureMissions();
     const d = Save.data;
     el('mission-tabs').innerHTML = `
-      <button class="tab ${missionTab === 'daily' ? 'on' : ''}" data-t="daily">📅 Diarias</button>
-      <button class="tab ${missionTab === 'weekly' ? 'on' : ''}" data-t="weekly">🗓 Semanales</button>
-      <button class="tab ${missionTab === 'ach' ? 'on' : ''}" data-t="ach">🏆 Logros</button>`;
+      <button class="tab ${missionTab === 'daily' ? 'on' : ''}" data-t="daily">${Ico.n('calendar',13)} Diarias</button>
+      <button class="tab ${missionTab === 'weekly' ? 'on' : ''}" data-t="weekly">${Ico.n('calendar',13)} Semanales</button>
+      <button class="tab ${missionTab === 'ach' ? 'on' : ''}" data-t="ach">${Ico.n('trophy',13)} Logros</button>`;
     el('mission-tabs').querySelectorAll('.tab').forEach(t => t.onclick = () => { missionTab = t.dataset.t; renderMissions(); });
 
     const box = el('mission-list');
@@ -606,7 +606,7 @@ const UI = (() => {
         const done = m.prog >= def.goal;
         const got = claimed.includes(m.id);
         const rewStr = Object.entries(def.reward).map(([k, v]) =>
-          `${k === 'gold' ? '🪙' : k === 'gems' ? '💎' : '🎟️'}+${U.fmt(v)}`).join(' ');
+          `${Ico.n(k === 'gold' ? 'coin' : k === 'gems' ? 'gem' : 'ticket', 12)} +${U.fmt(v)}`).join(' ');
         return `<div class="mission-row ${got ? 'claimed' : ''}">
           <div class="m-info"><b>${esc(def.desc)}</b>
             <div class="m-bar"><div class="m-fill" style="width:${Math.min(100, m.prog / def.goal * 100)}%"></div></div>
@@ -634,9 +634,9 @@ const UI = (() => {
         const prog = Game.achProgress(a);
         const done = prog >= a.goal;
         const claimed = !!d.achievements[a.id + '_claimed'];
-        const rewStr = Object.entries(a.reward).map(([k, v]) => `${k === 'gold' ? '🪙' : k === 'gems' ? '💎' : '🎟️'}+${U.fmt(v)}`).join(' ');
+        const rewStr = Object.entries(a.reward).map(([k, v]) => `${Ico.n(k === 'gold' ? 'coin' : k === 'gems' ? 'gem' : 'ticket', 12)} +${U.fmt(v)}`).join(' ');
         return `<div class="mission-row ${claimed ? 'claimed' : ''}">
-          <div class="m-info"><b>🏆 ${esc(a.name)}</b><br><small>${esc(a.desc)}</small>
+          <div class="m-info"><b>${Ico.n('trophy', 14)} ${esc(a.name)}</b><br><small>${esc(a.desc)}</small>
             <div class="m-bar"><div class="m-fill" style="width:${Math.min(100, prog / a.goal * 100)}%"></div></div>
           </div>
           <div class="m-right">
@@ -651,7 +651,7 @@ const UI = (() => {
         d.achievements[a.id + '_claimed'] = true;
         Game.grantReward(a.reward);
         Save.save(); AudioSys.sfx('gem');
-        toast('🏆 ¡Logro reclamado!');
+        toast('¡Logro reclamado!');
         renderCurrencies(); renderMissions();
       });
     }
@@ -663,40 +663,40 @@ const UI = (() => {
     const evs = DATA.activeEvents();
     el('events-list').innerHTML = evs.length ? evs.map(e => `
       <div class="event-card">
-        <div class="ec-icon">${e.icon}</div>
+        <div class="ec-icon">${Ico.n(e.icon, 28)}</div>
         <div class="ec-info"><b>${esc(e.name)}</b><br><small>${esc(e.desc)} · ${e.schedule}</small></div>
         <span class="ec-live">● EN VIVO</span>
       </div>`).join('') : '<div class="hint">Hoy no hay eventos. ¡Vuelve mañana!</div>';
 
     el('gem-shop').innerHTML = `
-      <div class="section-title">💎 TIENDA DE GEMAS</div>
+      <div class="section-title">${Ico.n('gem', 15)} TIENDA DE GEMAS</div>
       <div class="gem-packs">${DATA.GEM_PACKS.map(p => `
         <div class="gem-pack">
-          <div class="gp-gems">💎 ${U.fmt(p.gems)}</div>
+          <div class="gp-gems">${Ico.n('gem', 15)} ${U.fmt(p.gems)}</div>
           ${p.bonus ? `<div class="gp-bonus">+${U.fmt(p.bonus)} BONO</div>` : ''}
           <div class="gp-label">${p.label}</div>
           <button class="btn btn-small btn-purple" data-pack="${p.id}">${p.price}</button>
         </div>`).join('')}
       </div>
       <div class="hint">Pago simulado en esta versión de prueba — integración de compras listo para producción.</div>
-      <div class="section-title">🎁 OFERTAS DE ORO</div>
+      <div class="section-title">${Ico.n('gift', 15)} OFERTAS DE ORO</div>
       <div class="gem-packs">
-        <div class="gem-pack"><div class="gp-gems">🪙 1,000</div><div class="gp-label">Bolsa</div><button class="btn btn-small btn-blue" data-gold="1000" data-cost="50">💎 50</button></div>
-        <div class="gem-pack"><div class="gp-gems">🪙 5,000</div><div class="gp-bonus">MEJOR VALOR</div><div class="gp-label">Cofre</div><button class="btn btn-small btn-blue" data-gold="5000" data-cost="220">💎 220</button></div>
-        <div class="gem-pack"><div class="gp-gems">🎟️ 1 Ticket</div><div class="gp-label">Invocación</div><button class="btn btn-small btn-blue" data-ticket="1" data-cost="120">💎 120</button></div>
+        <div class="gem-pack"><div class="gp-gems">${Ico.n('coin', 15)} 1,000</div><div class="gp-label">Bolsa</div><button class="btn btn-small btn-blue" data-gold="1000" data-cost="50">${Ico.n('gem',12)} 50</button></div>
+        <div class="gem-pack"><div class="gp-gems">${Ico.n('coin', 15)} 5,000</div><div class="gp-bonus">MEJOR VALOR</div><div class="gp-label">Cofre</div><button class="btn btn-small btn-blue" data-gold="5000" data-cost="220">${Ico.n('gem',12)} 220</button></div>
+        <div class="gem-pack"><div class="gp-gems">${Ico.n('ticket', 15)} 1 Ticket</div><div class="gp-label">Invocación</div><button class="btn btn-small btn-blue" data-ticket="1" data-cost="120">${Ico.n('gem',12)} 120</button></div>
       </div>`;
     el('gem-shop').querySelectorAll('[data-pack]').forEach(b => b.onclick = () => {
       const p = DATA.GEM_PACKS.find(x => x.id === b.dataset.pack);
       d.player.gems += p.gems + p.bonus;
       Save.save(); AudioSys.sfx('gem');
-      toast(`💎 +${U.fmt(p.gems + p.bonus)} gemas (demo)`);
+      toast(`${Ico.n('gem', 14)} +${U.fmt(p.gems + p.bonus)} gemas (demo)`);
       renderCurrencies();
     });
     el('gem-shop').querySelectorAll('[data-gold]').forEach(b => b.onclick = () => {
       const cost = +b.dataset.cost;
       if (Game.spendGems(cost)) {
         Game.addGold(+b.dataset.gold);
-        AudioSys.sfx('coin'); toast('🪙 Oro comprado');
+        AudioSys.sfx('coin'); toast('Oro comprado');
         renderCurrencies();
       } else toast('Gemas insuficientes');
     });
@@ -704,7 +704,7 @@ const UI = (() => {
       const cost = +b.dataset.cost;
       if (Game.spendGems(cost)) {
         d.player.tickets += 1;
-        AudioSys.sfx('gem'); toast('🎟️ +1 Ticket');
+        AudioSys.sfx('gem'); toast('+1 Ticket de invocación');
         renderCurrencies();
       } else toast('Gemas insuficientes');
     });
@@ -714,21 +714,21 @@ const UI = (() => {
   function renderSettings() {
     const s = Save.data.settings;
     el('settings-list').innerHTML = `
-      <div class="set-row"><span>🎨 Calidad gráfica</span>
+      <div class="set-row"><span>${Ico.n('spark',13)} Calidad gráfica</span>
         <div class="seg">
           ${['auto', 'low', 'medium', 'high'].map(q => `<button class="seg-btn ${s.quality === q ? 'on' : ''}" data-q="${q}">${{ auto: 'Auto', low: 'Baja', medium: 'Media', high: 'Alta' }[q]}</button>`).join('')}
         </div></div>
-      <div class="set-row"><span>🎥 Cámara por defecto</span>
+      <div class="set-row"><span>${Ico.n('camera',13)} Cámara por defecto</span>
         <div class="seg">
           ${['third', 'aerial', 'first'].map(c => `<button class="seg-btn ${s.camera === c ? 'on' : ''}" data-cam="${c}">${{ third: '3ª Persona', aerial: 'Aérea', first: '1ª Persona' }[c]}</button>`).join('')}
         </div></div>
-      <div class="set-row"><span>🖱 Sensibilidad cámara</span><input type="range" id="set-sens" min="0.4" max="2" step="0.1" value="${s.sens}"></div>
-      <div class="set-row"><span>⚔ Auto-ataque</span><button class="toggle ${s.autoAttack ? 'on' : ''}" data-t="autoAttack">${s.autoAttack ? 'ON' : 'OFF'}</button></div>
-      <div class="set-row"><span>🔢 Números de daño</span><button class="toggle ${s.dmgNumbers ? 'on' : ''}" data-t="dmgNumbers">${s.dmgNumbers ? 'ON' : 'OFF'}</button></div>
-      <div class="set-row"><span>📳 Vibración</span><button class="toggle ${s.shake ? 'on' : ''}" data-t="shake">${s.shake ? 'ON' : 'OFF'}</button></div>
-      <div class="set-row"><span>🔊 Efectos de sonido</span><button class="toggle ${s.sfx ? 'on' : ''}" data-t="sfx">${s.sfx ? 'ON' : 'OFF'}</button></div>
-      <div class="set-row"><span>🎵 Música</span><button class="toggle ${s.music ? 'on' : ''}" data-t="music">${s.music ? 'ON' : 'OFF'}</button></div>
-      <div class="set-row danger"><span>⚠️ Borrar progreso</span><button class="btn btn-small btn-red" id="set-reset">Reiniciar</button></div>
+      <div class="set-row"><span>${Ico.n('gear',13)} Sensibilidad cámara</span><input type="range" id="set-sens" min="0.4" max="2" step="0.1" value="${s.sens}"></div>
+      <div class="set-row"><span>${Ico.n('sword',13)} Auto-ataque</span><button class="toggle ${s.autoAttack ? 'on' : ''}" data-t="autoAttack">${s.autoAttack ? 'ON' : 'OFF'}</button></div>
+      <div class="set-row"><span>${Ico.n('target',13)} Números de daño</span><button class="toggle ${s.dmgNumbers ? 'on' : ''}" data-t="dmgNumbers">${s.dmgNumbers ? 'ON' : 'OFF'}</button></div>
+      <div class="set-row"><span>${Ico.n('zap',13)} Vibración</span><button class="toggle ${s.shake ? 'on' : ''}" data-t="shake">${s.shake ? 'ON' : 'OFF'}</button></div>
+      <div class="set-row"><span>${Ico.n('spark',13)} Efectos de sonido</span><button class="toggle ${s.sfx ? 'on' : ''}" data-t="sfx">${s.sfx ? 'ON' : 'OFF'}</button></div>
+      <div class="set-row"><span>${Ico.n('moon',13)} Música</span><button class="toggle ${s.music ? 'on' : ''}" data-t="music">${s.music ? 'ON' : 'OFF'}</button></div>
+      <div class="set-row danger"><span>${Ico.n('warn',13)} Borrar progreso</span><button class="btn btn-small btn-red" id="set-reset">Reiniciar</button></div>
       <div class="credits">AETHERIA · Guardianes del Cristal · v2.0.0<br>Hecho con Three.js — 100% offline</div>`;
     el('settings-list').querySelectorAll('[data-q]').forEach(b => b.onclick = () => {
       s.quality = b.dataset.q; Save.save();
@@ -766,9 +766,17 @@ const UI = (() => {
     VFX.setFlashEl(el('flash-overlay'));
   }
 
+  let _icoHero = null;
   function updateHUD(dt) {
     const p = Combat.player;
     if (!p) return;
+    // iconos de habilidades según el héroe activo
+    if (p.heroId !== _icoHero) {
+      _icoHero = p.heroId;
+      el('skill-1-ico').innerHTML = Ico.n(DATA.SKILLS[p.hero.skill1].icon, 24);
+      el('skill-2-ico').innerHTML = Ico.n(DATA.SKILLS[p.hero.skill2].icon, 24);
+      el('skill-ult-ico').innerHTML = Ico.n(DATA.ULTS[p.hero.ult].icon, 27);
+    }
     if (hudEls['hud-hp-fill']) {
       hudEls['hud-hp-fill'].style.width = Math.max(0, p.hp / p.maxHp * 100) + '%';
       hudEls['hud-hp-txt'].textContent = `${U.fmt(Math.max(0, p.hp))} / ${U.fmt(p.maxHp)}`;
@@ -868,10 +876,10 @@ const UI = (() => {
     AudioSys.sfx('wave');
   }
   function bossIntro(B) {
-    bigBanner(`<div class="bb-kicker">${esc(B.title)}</div><div class="bb-main">👑 ${esc(B.name)}</div>`, 'boss', 3200);
+    bigBanner(`<div class="bb-kicker">${esc(B.title)}</div><div class="bb-main">${Ico.n('crown', 26)} ${esc(B.name)}</div>`, 'boss', 3200);
   }
   function ultBanner(heroName, ultName) {
-    bigBanner(`<div class="bb-kicker">${esc(heroName)}</div><div class="bb-main">💫 ${esc(ultName)}</div>`, 'ult', 1800);
+    bigBanner(`<div class="bb-kicker">${esc(heroName)}</div><div class="bb-main">${Ico.n('spark', 26)} ${esc(ultName)}</div>`, 'ult', 1800);
   }
   function modeBanner(title, sub) {
     bigBanner(`<div class="bb-kicker">${esc(sub)}</div><div class="bb-main">${esc(title)}</div>`, 'mode', 2600);
@@ -923,10 +931,10 @@ const UI = (() => {
       ${starsHtml}
       ${opts.rows ? opts.rows.map(r => `<div class="res-row"><span>${r[0]}</span><b>${r[1]}</b></div>`).join('') : ''}
       ${opts.rewards ? `<div class="res-rewards">
-        ${opts.rewards.gold ? `<span>🪙 +${U.fmt(opts.rewards.gold)}</span>` : ''}
-        ${opts.rewards.gems ? `<span>💎 +${U.fmt(opts.rewards.gems)}</span>` : ''}
-        ${opts.rewards.xp ? `<span>⭐ +${U.fmt(opts.rewards.xp)} XP</span>` : ''}
-        ${opts.rewards.tickets ? `<span>🎟️ +${opts.rewards.tickets}</span>` : ''}
+        ${opts.rewards.gold ? `<span>${Ico.n('coin', 14)} +${U.fmt(opts.rewards.gold)}</span>` : ''}
+        ${opts.rewards.gems ? `<span>${Ico.n('gem', 14)} +${U.fmt(opts.rewards.gems)}</span>` : ''}
+        ${opts.rewards.xp ? `<span>${Ico.n('star', 14)} +${U.fmt(opts.rewards.xp)} XP</span>` : ''}
+        ${opts.rewards.tickets ? `<span>${Ico.n('ticket', 14)} +${opts.rewards.tickets}</span>` : ''}
       </div>` : ''}`;
     el('results-retry').style.display = opts.onRetry ? '' : 'none';
     el('results-next').style.display = opts.onNext ? '' : 'none';
@@ -948,9 +956,9 @@ const UI = (() => {
   /* ============ Tutorial ============ */
   function showTutorialTips() {
     if (Save.data.tutorial.done) return;
-    toast('🕹️ Joystick para moverte · ⚔ botón para atacar', 3500);
-    setTimeout(() => toast('✨ Usa habilidades y esquiva con ⟳', 3000), 4000);
-    setTimeout(() => toast('🎥 Cambia cámara con el botón 📷', 3000), 8000);
+    toast('Joystick para moverte · botón de espada para atacar', 3500);
+    setTimeout(() => toast('Usa habilidades y esquiva con el botón circular', 3000), 4000);
+    setTimeout(() => toast('Cambia la cámara con el botón de cámara', 3000), 8000);
     Save.data.tutorial.done = true; Save.save();
   }
 
